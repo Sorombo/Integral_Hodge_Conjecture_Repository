@@ -1,0 +1,177 @@
+option(noredefine);
+LIB "foliation.lib";
+
+// ============================================================================
+// ============================================================================
+int d=3; int n=6; 
+intvec mlist=d; 
+for (int i=1;i<=n; i=i+1){
+	mlist=mlist,d;
+}; 
+
+ring r=(0,z), (x(1..n+1)),dp; 
+poly cp=cyclotomic(d); 
+int degext=deg(cp) div deg(var(1)); 
+cp=subst(cp, x(1),z); 
+minpoly =number(cp); 
+list ll=MixedHodgeFermat(mlist); 
+list J=ll[1][1];
+
+for(int i=2; i<=(n div 2); i=i+1){
+	J=J+ll[1][i];
+}; 
+
+int nh=n div 2; 
+list Pn2=LinearCoho(mlist,0); 
+J=J+RemoveList(ll[1][nh+1], Pn2[1]); 
+list Jexp; 
+for(i=1; i<=size(J); i=i+1){
+		Jexp=insert(Jexp, leadexp(J[i]), size(Jexp));
+}
+matrix A = DimHodgeCycles(mlist, Jexp); 
+list Y = A;
+write(":w ../../auxiliar_data/hodge_cycles/raw/hodge_cycles_matrix/hodge_cycles_n_6_d_3.txt", nrows(A), ncols(A), Y);
+
+// Calculating intersection matrix
+poly f; 
+for (i=1; i<=n+1; i=i+1){
+	f=f+var(i)^mlist[i];
+}
+ideal I=std(jacob(f)); 
+I=kbase(I);
+list Il=I[1..size(I)];
+matrix Psi=IntersectionMatrix(Il);
+list Y = Psi;
+write(":w ../../auxiliar_data/hodge_cycles/raw/vanishing_intersection_matrix/vanishing_intersection_n_6_d_3.txt", nrows(Psi), ncols(Psi), Y);
+
+
+// ============================================================================
+// ============================================================================
+int d=4; int n=6; 
+intvec mlist=d; 
+for (int i=1;i<=n; i=i+1){
+	mlist=mlist,d;
+}; 
+
+ring r=(0,z), (x(1..n+1)),dp; 
+poly cp=cyclotomic(d); 
+int degext=deg(cp) div deg(var(1)); 
+cp=subst(cp, x(1),z); 
+minpoly =number(cp); 
+list ll=MixedHodgeFermat(mlist); 
+list J=ll[1][1];
+
+for(int i=2; i<=(n div 2); i=i+1){
+	J=J+ll[1][i];
+}; 
+
+int nh=n div 2; 
+list Pn2=LinearCoho(mlist,0); 
+J=J+RemoveList(ll[1][nh+1], Pn2[1]); 
+list Jexp; 
+for(i=1; i<=size(J); i=i+1){
+		Jexp=insert(Jexp, leadexp(J[i]), size(Jexp));
+}
+matrix A = DimHodgeCycles(mlist, Jexp); 
+list Y = A;
+write(":w ../../auxiliar_data/hodge_cycles/raw/hodge_cycles_matrix/hodge_cycles_n_6_d_4.txt", nrows(A), ncols(A), Y);
+
+// Calculating intersection matrix
+poly f; 
+for (i=1; i<=n+1; i=i+1){
+	f=f+var(i)^mlist[i];
+}
+ideal I=std(jacob(f)); 
+I=kbase(I);
+list Il=I[1..size(I)];
+matrix Psi=IntersectionMatrix(Il);
+list Y = Psi;
+write(":w ../../auxiliar_data/hodge_cycles/raw/vanishing_intersection_matrix/vanishing_intersection_n_6_d_4.txt", nrows(Psi), ncols(Psi), Y);
+
+// ============================================================================
+// ============================================================================
+int d=5; int n=6; 
+intvec mlist=d; 
+for (int i=1;i<=n; i=i+1){
+	mlist=mlist,d;
+}; 
+
+ring r=(0,z), (x(1..n+1)),dp; 
+poly cp=cyclotomic(d); 
+int degext=deg(cp) div deg(var(1)); 
+cp=subst(cp, x(1),z); 
+minpoly =number(cp); 
+list ll=MixedHodgeFermat(mlist); 
+list J=ll[1][1];
+
+for(int i=2; i<=(n div 2); i=i+1){
+	J=J+ll[1][i];
+}; 
+
+int nh=n div 2; 
+list Pn2=LinearCoho(mlist,0); 
+J=J+RemoveList(ll[1][nh+1], Pn2[1]); 
+list Jexp; 
+for(i=1; i<=size(J); i=i+1){
+		Jexp=insert(Jexp, leadexp(J[i]), size(Jexp));
+}
+matrix A = DimHodgeCycles(mlist, Jexp); 
+list Y = A;
+write(":w ../../auxiliar_data/hodge_cycles/raw/hodge_cycles_matrix/hodge_cycles_n_6_d_5.txt", nrows(A), ncols(A), Y);
+
+// Calculating intersection matrix
+poly f; 
+for (i=1; i<=n+1; i=i+1){
+	f=f+var(i)^mlist[i];
+}
+ideal I=std(jacob(f)); 
+I=kbase(I);
+list Il=I[1..size(I)];
+matrix Psi=IntersectionMatrix(Il);
+list Y = Psi;
+write(":w ../../auxiliar_data/hodge_cycles/raw/vanishing_intersection_matrix/vanishing_intersection_n_6_d_5.txt", nrows(Psi), ncols(Psi), Y);
+
+// ============================================================================
+// ============================================================================
+int d=6; int n=6; 
+intvec mlist=d; 
+for (int i=1;i<=n; i=i+1){
+	mlist=mlist,d;
+}; 
+
+ring r=(0,z), (x(1..n+1)),dp; 
+poly cp=cyclotomic(d); 
+int degext=deg(cp) div deg(var(1)); 
+cp=subst(cp, x(1),z); 
+minpoly =number(cp); 
+list ll=MixedHodgeFermat(mlist); 
+list J=ll[1][1];
+
+for(int i=2; i<=(n div 2); i=i+1){
+	J=J+ll[1][i];
+}; 
+
+int nh=n div 2; 
+list Pn2=LinearCoho(mlist,0); 
+J=J+RemoveList(ll[1][nh+1], Pn2[1]); 
+list Jexp; 
+for(i=1; i<=size(J); i=i+1){
+		Jexp=insert(Jexp, leadexp(J[i]), size(Jexp));
+}
+matrix A = DimHodgeCycles(mlist, Jexp); 
+list Y = A;
+write(":w ../../auxiliar_data/hodge_cycles/raw/hodge_cycles_matrix/hodge_cycles_n_6_d_6.txt", nrows(A), ncols(A), Y);
+
+// Calculating intersection matrix
+poly f; 
+for (i=1; i<=n+1; i=i+1){
+	f=f+var(i)^mlist[i];
+}
+ideal I=std(jacob(f)); 
+I=kbase(I);
+list Il=I[1..size(I)];
+matrix Psi=IntersectionMatrix(Il);
+list Y = Psi;
+write(":w ../../auxiliar_data/hodge_cycles/raw/vanishing_intersection_matrix/vanishing_intersection_n_6_d_6.txt", nrows(Psi), ncols(Psi), Y);
+
+

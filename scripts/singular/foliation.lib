@@ -1,0 +1,5217 @@
+version="$Id: foliation.lib, v 2.20 14/08/2017";
+info="
+LIBRARY: foliation.lib A library for computing Mixed Hodge structures, Gauss-Manin
+         connections, Picard-Fuchs equations and modular foliations, Hodge cycles and 
+         much more...
+AUTHOR:  Hossein Movasati, email:hossein@impa.br
+
+SEE ALSO:standard_lib 
+
+NOTE:    When  inside a procedure we use another procedure of this library or 
+         a library of Singular, then we mention it explicitly in the help
+         section of the procedure. If nothing is mentioned it means that we 
+         have used only the standard library of Singular. 
+         The present library before the version 1.12 is based  on the results 
+         of the articles:
+         
+         [Mo1] H. Movasati, Mixed Hodge structures of affine varieties,
+         Ann. Inst. Fourier., Tome 57, (2007), fasicule 3, 775-801.   
+         [Mo2] H. Movasati, Calculation of mixed Hodge structures, Gauss-Manin 
+         connections and Picard-Fuchs equations. Real and Complex Singularities, 
+         Trends in Mathematics, 247-262, 2006, Birkhauser (proceeding of Sao 
+         Carlos Conference in Singularities, CIRM, 2004).
+         
+         and after version 1.2 is the implementation of the algorithm in 
+         the text
+          
+         [Mo3 ] H. Movasati, Multiple Integrals and Modular Differential Equations, 
+         28 Coloquio Brasileiro de Matematica, p. 168, 2011.
+         
+         After version 1.5 the library is mainly designed for the book
+         
+         [Mo4] H. Movasati, A Course in Hodge Theory: With Emphasis on Multiple 
+         Integrals. 
+
+         Some procedures do not exists after v 1.2. Please see the comments for
+         Version 1.2. After this version there has been a big change the library.
+        
+         
+         All the computations in this library turns around a tame polynomial f.
+         Differential n-forms are stored as 1*(n+1) matrices. Except for some 
+         general procedures, we have used the following fixed notations in each
+         procedure:
+         g is a homogeneous polynomial
+         f is a tame polynomial with last homogeneous part g, g=lasthomo(f);
+         I is the Jacobian ideal of g, I=jacob(g);
+         gI is the standard basis of I, gI=std(I); 
+         V=okbase(gI); 
+         mu=vdim(gI); mu=size(V); The Milnor number of g. There is difference 
+         between these two mu's when f has no singularity. 
+         n=nvars(basering)-1;
+         d=deg(g);
+         
+         Version 1.00: 
+                The first version.
+         Version 1.10: 1/4/2005:
+                It has new proceedures substpar, diffparpol, diffpar,
+                gaussmaninp, PFeqp and PFEq. It is basically the extension 
+                of the Gauss-Manin connection calculations to an arbitrary 
+                parameter.
+         Version 1.11: 4/6/2005:
+                It contains the new proceedure hodgenum.
+         Version 1.12: 29/7/2005:
+                It contains the new proceedure sysdif and the procedure
+                PFeqp uses sysdif and is just written in few lines.
+                15/8/2005, the proceedure 'singlocus' has the new name 
+                'discriminant'
+         Version 1.2: 27/10/2005:
+               From this version on, it is not necessary more that the base 
+               ring to have a parameter(except for two static procedure 'linear1'
+               and 'linear2'). To calculate with the the polynomial 'f' in  the
+               sense of previous versions, we have to introduce the parameter 
+               's' and work with the polynomial 'f-s'. Many procedures create 
+               the parameter 's' and then start to calculate with 'f-s'. The
+               following changes on each procedure are made:
+               The type of the procedure 'discriminant' is now 'number' and 
+               not 'polynomial'. Procedure 'S' does not exists more. Please use
+               'discriminant' instead of 'S'.
+               The procedure 'addparam' is added.
+               In the previous versions of 'mulmat' and 'muldF' twice the
+               command 'std' was used. Now it is once.
+               The proceedures 'etaof' and 'infoof' are added. The proceedure
+               'infoof' is created in order to avoid repeated calculations.
+               The static procedures 'linear1' and 'linear2' has been changed by
+               adding 'list lula'. But still they need the first parameter of the
+               base ring for calculations. 
+               To use the procedures 'linear' and 'linearp' we do not need more
+               to introduce an additional parameter for the basering. These 
+               procedures in the new version use the procedure 'addparam' to
+               define a new ring with an additional parameter and after doing
+               calculations they export the result to the previous ring.
+               A list of the output type of 'infoof' is added as an optional
+               entry.
+               The procedure 'gaussmanin' calculate the Gauss-Manin connection
+               of a single differential form in both Brieskorn modules. The 
+               procedure 'gaussmaninp' does not exist more. Instead there is
+               'gaussmaninmatrix' which works for both Brieskorn modules.
+               The static procedure QP which is used in 'nabla' and 'nablap'
+               of the previous version has been changed. 'nabla' and 'nablap'
+               do not exist more. 
+         Version 1.21: 12/1/2006:
+               The procedure 'foliation'  is added. 
+         Version 1.3: 20/4/2006
+              A revision of the procedures. 'gaussmanin' and 'PFeq' do not work 
+              properly for the examples of [Mo2].  Wowwww, I found the reason. 
+              In the procedure 'etaof' the tame polynomial f mines a new parameter
+              was written instead of f. I am not at all a good programmer. 
+              The procedure 'PFEq' does not exist more.
+         Version 1.31: 8/7/2006
+              Some modifications on the procedure 'hodgenum'. Also the help
+              of some procedures are improved. In the 'infoof' it is only use 'std'
+              and if we want to use 'groebner' we have to modify 'infoof' directly.
+         Version 1.32: 10/7/2006 
+              Now, it is possible to give the discriminant to etaof and get its 
+              corresponding eta.  
+         Version 1.33: 12/7/2006 
+              The new procedures 'gaussmaninvf' and 'PFequ' are added.
+              'gaussmaninvf' has the same structure as 'gaussmanin'. The 
+              difference is that it calculates the Gauss-Manin connection along a
+              vector field and at the end it does not write the output in the canonical
+              basis. The body of 'PFequ' is similar to 'sysdif' and it uses 'gaussmaninvf'.
+              In general it is faster than 'PFeq'. 
+       Version 1.34: 19/7/2006
+              The procedure dbeta is modified and the procedures Imk, Abeta, 
+              changebase do not exit more. I may put them in the future versions.
+              The procedure PFequ returns a matrix in which the some zeros are
+              deleted. The procedure gaussmaninvf uses linear/linearp to simplify 
+              its output. For this reason some part of PFequ is deleted.
+       Version 1.36: 13/10/2011
+              The procedure qexpansion, HalphenRamanujan, derivatives and LinearRelations 
+              is added. From this version on, I am just collecting here all procedures that 
+              I am writing.
+       Version 1.40: 20/03/2012
+              The procedure  t1t2t3 and t1t2t3primepowers is added.
+       Version 1.41: 03/04/2012
+              The procedure EisensteinTriangular is added. 
+       Version 1.42: 29/08/2012
+              The procedures OneOver and LambertSeries is added. 
+       Version 1.43: 05/12/2012
+              The procedures t1t2t3, t1t2t3primepower, EisensteinTriangular, OneOver and 
+              LambertSeries are moved to a new library called triangulargroup.lib. The library
+              linalg.lib is automatically loaded. 
+       Version 1.5: 2/01/2016
+              The procedure lcm, MixedHodgeFermat, HodgeNumber, PeriodMatrix, IntersectionMatrix,
+              DimHodgeCycles, BasisHodgecycles, MulMat, Matrixpij, CodModInt is added. 'finvar.lib' 
+              is automatically dowloaded.  
+       Version 1.52: 08/04/2016
+              OneOver and LambertSeries are added.
+       Version 1.5 01/05/2016
+              TraAlg added. 
+       Version 1.5 12/05/2016
+              PochhammerSymbol is added
+       Version 2.00  15/01/2017
+              This version is prepared for the publication of the Book: A course in Hodge theory: with
+              emphasis on multiple integrals. For more details see this book.
+       Version 2.01, 20/01/2017
+               The input and output of 'PochhammerSymbol' are now numbers and not polynomials. 
+       Version 2.02, 27/03/2017
+               The procedures 'CodComIntZar' and 'SumTwoLinearCycle' are added.
+       Version 2.10, 15/06/2017
+               In the procedure 'PeriodLinearCycle' the sign of the permutation was not included.
+               This was producring a contradictory results. 
+               The procedure 'SignPerm', 'Monomials', 'TaylorSeries', 'EquHodge' and 'SmoothReduced' 
+               are added.
+       Version 2.11 20/06/2017
+               The last optional entry of 'Monomials' is modified. An optional entry is added to 
+               'TaylorSeries' so that it returns the homogeneous pieces of the Taylor series as a 
+               list. 'EquaHodge' and 'SmoothReduced1' and 'SmoothReduced2' are added. 
+       Version 2.15 30/06/2017
+               The following procedures ar added: 'aIndex', 'bIndex', 'ListPeriodLinearCycle', 
+                'SumThreeLinearCycle', 'DistinctHodeLocus'  'RandomIntVec' and 'GoodMinor'. 
+                'PeriodsLinearCycle' has the new name 'PeriodLinearCycle'.
+       Version 2.17 03/07/2017
+               'SumTwoLinearCycle' has now an optional entry. Its example is modified. The procedures 
+                'aIndex' and 'ListPeriodLinearCycle' are modified. The procedures 
+               'SmoothReduced1', 'SmoothReduced2' and 'EquaHodge' are outdated. Instead use 'SmoothReduced' 
+               and 'HodgeLocusIdeal'. 'SmoothReduced1' is completely removed.
+       Version 2.18 13/07/2017
+               'SumTwoLinearCycle' has now a third option in its  optional entry. 'ConstantRank' is added.
+               'Monomials' has a fourth option. 'SmoothReduced' another optional entry for half-half hypersurfaces. 
+       Version 2.19 24/07/2017
+               'SmoothReduced' is improved.
+       Version 2.20  14/08/2017
+               Enzo Aljovin's 'bIndex' procedure is added. For the old version of 'bIndex' see version 2.19 of 
+               foliation.lib.  The new version of 'bIndex' uses 'remove_element', 'find_min' and  'bIndex_helper'. 
+KEYWORDS:See the articles above.
+
+PROCEDURES:
+         GENERAL PROCEDURES:
+         okbase, it is similar to kbase
+         lasthomo, last homogeneous polynomial of a given polynomial
+         mulmat, multiplication matrix of f in the Milnor vector space of g
+         muldF, multiplication matrix of homogeneous polynomial,
+         divmat, similar to division
+         eta, the canonical n-form eta
+         difofn. differential of an n-form,
+         addparam, adding parameters to a ring,
+         cleardenommat, clear denominators of a matrix expression
+         substpar, substitute in a paramter,
+         dfwedge, wedge product of df with an n form,
+         diffpar, differentiation with respect to a parameter,
+         SignPerm, Sign of a permutation. 
+         Monomials, the list of monomials in a given variables,
+         RandomIntVec, a random integer vector,
+         GoodMinor, a maximal minor of a matrix with non-zero determinant, 
+         
+         
+         PROCEDURES RELATED TO THE TAME POLYNOMIAL f:
+         discriminant, discriminant of a polynomial,
+         etaof, the differential n-form eta,
+         infoof, calulates many useful information of a tame polynomial.
+         dAbeta, Abeta numbers  associated to a basis of Milnor vector space
+         linear, writes an element of H''  in its canonical basis
+         linearp, writes an element of H'  in its canonical basis
+         gaussmanin, Gauss-Manin connection in the Brieskon modules H', H''.
+         gaussmaninvf, Gauss-Manin connection along a vector field.
+         PFequ, Picard-Fuchs equations in both Brieskorn module H', H''.
+         gaussmaninmatrix, Gauss-Manin connection matrix in the Brieskon modules H', H''.
+         PFeq, Picard-Fuchs equations in both Brieskorn module H', H''.
+         dbeta, the numbers dbeta which gives us a basis compatible with MHS.
+         sysdif, getting Picard-Fuchs equations from a Fuchsian system.
+         LinearRelations, linear relations in the Brieskorn module of a singular tame polynomial.
+	 
+	 PROCEDURES RELATED TO THE FERMAT VARIETY:
+         MixedHodgeFermat, Mixed Hodge structure of an affine Fermat variety.
+         lcm, the lowest common divisor. 
+         HodgeNumber, Hodge numbers of hypersurfaces.
+         PeriodMatrix, the period matrix of the Fermat variety.
+         RemoveList, remove a list from another list.
+         DimHodgeCycles, Dimension of the space of Hodge cycles.
+         BasisHodgeCycles, Basis of the space of Hodge cycles. 
+         IntersectionMatrix, Intersection matrix in homology.
+         Matrixpij, Martrix of periods pij.
+         TranCoho, Transcendetal part of the cohomology.
+         LinearCoho, Part of the cohomology representing Linear cycles. 
+         PeriodLinearCycle, periods of linear cycles.
+         CodComInt, codimension of the loci of hypersurfaces,
+         Codim, a number related to Koszul complex.
+         SumTwoLinearCycle, codimension of a Hodge locus.
+         TaylorSeries, the taylor series of periods of hypersurfaces. 
+         EquHodge, a list of possible minimal generators of the Hodge locus. 
+         SmoothReduced1, old version of
+         SmoothReduced2, Check whether the Hodge locus is smooth and reduced.
+         aIndex, a Index of linear cycles.
+         bIndex, b index of linear cycles.
+         ListPeriodLinearCycle, List of period vectors of linear cycles. 
+         SumThreeLinearCycle, the rank of [p_{i+j}] for sum of three linear cycles. 
+         DistinctHodeLocus, To verify that two Hodge loci are distinct.
+         GoodMinor, a maximal square minor of a matrix with nonzero determinant.
+         RandomIntVec, Random integer vector. 
+         SmoothReduced, a better version of SmoothReduced2.
+         ConstantRank, the constant rank for sum of two linear cycles.
+         
+ 
+         
+         
+         PROCEDURES RELATED TO MODULAR DIFFERENTIAL EQUATIONS:
+         foliation, the foliations obtained by level surface of integrals.
+         qexpansion, claculating q-expansion using the modular differential equations.
+         HalphenRamanujan, the data bank of modular differential equations.
+         derivatives, derivatives of a list with respect to variables.
+         OneOver, one over a formal power series.
+         LamberSeries, Lambert series format of a formal power series.
+         PochhammerSymbol, Pochhammer Symbol.
+         
+         
+	  OLD PROCEDURES:
+	  hodgenum, Hodge numbers of weighted hypersurfaces.
+	  DimensionOfHodgeCycles, Dimension of Hodge cycles, old version.
+	  MulMat, Multiplcation with a polynomial.
+	  MatrixpijOld,  Matrix of periods (might be used beyond Fermat!)
+";
+LIB "linalg.lib"; LIB "finvar.lib"; 
+//---------------------------------------------------------------------------
+//---------------------------GENERAL PROCEDURES------------------------------
+//---------------------------------------------------------------------------
+proc okbase (ideal I)
+"USAGE:
+    okbase(ideal_expression)
+RETURN:
+    The same as the input type of the first argument.
+    It is the same as kbase. The degree function on the output monomials 
+    is decreasing.
+SEE ALSO: 
+    kbase
+EXAMPLE: 
+    example okbase; shows an example
+"
+{
+ideal V=kbase(I);
+int mu=size(V);
+int i; int j; poly p;
+
+for (i=1;i<=mu;i=i+1) 
+    {
+     for (j=i+1;j<=mu;j=j+1)
+         {
+         if (  deg(V[j]) > deg(V[i]) ){ p=V[j]; V[j]=V[i]; V[i]=p;}  
+         }    
+    }
+return(V);
+}
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0, (x,y),dp;
+    poly f=x3+y3;
+    okbase(std(jacob(f)));  
+}
+//--------------------------------------------------------------------------
+proc lasthomo (poly f) 
+"USAGE: 
+    lasthomo(poly_expression)
+RETURN:
+    The same as the input type. 
+    This procedure finds the last homogeneous part of the polynomial f.
+SEE ALSO: 
+    poly, deg
+EXAMPLE: 
+    example lasthomo; shows an example
+
+"
+{
+int s=size(f); int d=deg(f); poly g=0;
+for (int k=1; k<=s; k=k+1)
+    {
+    if (deg(f[k])==d)
+        {
+        g=g+f[k];
+        }
+
+    }
+return(g);
+}
+example
+{"Example:"; echo=2;
+    ring r=0, (x,y),dp;
+    poly f=2*(x3+y3)-3*(x2+y2);
+    lasthomo(f); 
+}
+//---------------------------------------------------------------------------
+proc mulmat (poly f, poly g,list #)       
+"USAGE:
+       mulmat(poly_expression,poly_expression) 
+       mulmat(poly_expression,poly_expression,ideal_expression)
+RETURN:
+    Quadratic matrix.
+    It computes the matrix of multiplication by 'f' in the Milnor vectorspace 
+    of 'g'. If you know the standard basis of the jacobian ideal of 'g' please
+    give it as the third entry.
+SEE ALSO: 
+    okbase, matrix
+EXAMPLE: 
+    example mulmat; shows an example
+"
+{
+if (size(#)==0){ideal gI=std(jacob(g));}else{ideal gI=#[1];}
+ideal V=okbase(gI);
+int mu=vdim(gI);
+if (mu==0) { "// **", g, " has no singularity **"; }
+if (mu<0)  {"// **", g, "has not isolated singularities **";}
+if (mu>0)
+      {
+      matrix A[mu][mu];
+      int s,i,k; poly h1;
+      for (k=1; k<=mu; k=k+1) {
+      h1=reduce(f*V[k], gI);
+      for (s=1; s<=size(h1); s=s+1) {
+      for (i=1; i<=mu; i=i+1) {   if ( leadmonom(h1[s]) == leadmonom(V[i]) )
+                         {A[k,i]=leadcoef(h1[s]);}                 }
+                                                                       }
+                              }
+return(A);
+      }
+}
+example
+{"Example:"; echo=2;
+    ring r=0, (x,y),dp;
+    poly f=2*(x3+y3)-3*(x2+y2);
+    print(mulmat(f,f));
+    ideal gI=std(jacob(f));
+     print(mulmat(f,f, gI));  
+}
+//--------------------------------------------------------------------------
+proc muldF(poly f,list #)
+"
+USAGE:
+   muldF(polynomial expression);
+   muldF(polynomial expression, ideal_expression);
+RETURN:
+   Quadratic matrix
+   It uses mulmat to calculate the multiplication of dF/dx_0 in 
+   C[x,x_0]/<dF/dx_i, i=1,2,..n+1>, where F is the homogenization of f.
+   Since the base ring is not supposed to have the variable x_0, we have used
+   the first varible of the base ring instead of x_0 for the output.
+   If you know the standard basis of the jacobian of f give it as the second
+   entry.
+SEE ALSO:
+   mulmat, okbase  
+"
+{
+if (size(#)==0){ideal gI=std(jacob(f));}else{ideal gI=#[1];}
+ideal V=okbase(gI);
+int mu=vdim(gI); int d=deg(f);
+matrix A[mu][mu]=mulmat(f,f,gI);
+int i; int j;
+
+for (i=1;i<=mu;i=i+1)
+    {
+     for (j=1;j<=mu;j=j+1)
+         { A[i,j]=d*var(1)^(deg(V[i])-deg(V[j])+d-1)*A[i,j];}
+    }
+
+//for (i=1;i<=mu;i=i+1){A[i,i]=A[i,i]-d*par(1)*var(1)^(d-1);}
+
+
+return(A);
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,s), (x,y),dp;
+    poly f=2*(x3+y3)-3*(x2+y2);
+    print(muldF(f));
+   ideal gI=std(jacob(f));
+    print(muldF(f,gI));
+}
+//--------------------------------------------------------------------------
+proc divmat (poly h, ideal I, list #) 
+"
+USAGE:
+    divmat(poly_expression, ideal_expression)
+    divmat(poly_expression, ideal_expression, ideal_expression)
+RETURN:
+    A list. This procedure is a modification of the procedure division.
+    If the quotient of the ideal I is finite dimensional then this procedure 
+    returns a list. The first entry is the matrix of coefficients of the 
+    reminder and the other is a matrix of polynomials which appear in the 
+    division. The matrix of coefficients is indexed by the entries of 
+    okbase(std(I)).
+    If you know 'ideal V=okbase(std(I))' give it as the third entry. 
+NOTE:
+    This procedure is only used in linear1.
+    
+SEE ALSO: 
+    okbase, division
+EXAMPLE: 
+    example divmat; shows an example
+
+"
+{
+if (size(#)==0){ideal V=okbase(std(I));}else{ ideal V=#[1];}
+int mu=size(V);
+      matrix A[1][mu];
+      int s,i,k;
+      list lh=division(h, I);
+      int sh=size(lh[2][1]);
+      for (s=1; s<=sh; s=s+1)
+             {
+             for (i=1; i<=mu; i=i+1)
+                 {
+                 if ( leadmonom(lh[2][1][s]) == leadmonom(V[i]) )
+                         {A[1,i]=leadcoef(lh[2][1][s]);}
+                 }
+             }
+list l=lh[1], A;
+return(l);
+}
+example
+{"Example:"; echo=2;
+    ring r=0, (x,y),dp;
+    ideal I=x2,y3;
+    poly h=xy+x3;
+    divmat(h,I);
+    ideal V=okbase(std(I));
+    divmat(h,I,V);
+}
+
+//---------------------------------------------------------------------------
+proc eta()
+"
+USAGE:
+    eta()
+RETURN:
+   This is the canonical n-form in C^{n+1} stored as a 1*(n+1) matrix.
+   To obtain the eta in the text [Movasati2005] one has to divide it by d,
+   the degree of f.  
+EXAMPLE: 
+    example eta; shows an example
+"
+{
+int n=nvars(basering)-1;
+int i; matrix e[1][n+1];
+for (i=1;i<=n+1;i=i+1) {e[1,i]=deg(var(i))*(-1)^(i-1)*var(i);}
+return(e);
+}
+example
+{"Example:"; echo=2;
+    ring r=0, (x,y),dp;
+    eta();
+}
+
+
+//---------------------------------------------------------------------------
+proc difofn (matrix P)
+"
+USAGE:
+    difofn(poly_expression)
+RETURN: 
+    An n-form P in C^{n+1} is stored as a 1*(n+1) matrix. The 1*i entry of
+    P is the coefficient of dx_1\wedge d_{i-1}\wedge dx_{i+1}\cdots dx_{n+1}    
+    This procedure calculates the polynomial Q such that d(P)=Q dx.
+
+"
+{
+int n=ncols(P)-1; poly Q=0;
+ 
+for (int i=1; i<=n+1;i=i+1)
+    {
+    Q=Q+(-1)^(i-1)*diff(P[1,i],var(i));
+    }
+return(Q);
+}
+example
+{"Example:"; echo=2;
+    ring r=0, (x,y),dp;
+    difofn(x^3*eta());
+} 
+//----------------------------------------------------------------------
+proc addparam (string @t) 
+"
+USAGE:
+    addparam(string_expression)
+RETURN:
+    It adds a new parameter , which is the string in @t,  to the 'ringlist'
+    of the basering and returns a new list 'Lring'. The new parameter is the 
+    first parameter of the new ring. Using the command 'def new=ring(Lring)' 
+    one can define the new ring with the additional parameter. This procedure
+    works only for the field Z_p,Q and their transcendental extensions. 
+EXAMPLE: 
+    example addparam; shows an example
+"
+{ 
+  
+  // Set up new ring and make it the active ring: 
+  //======
+  list Lring = ringlist(basering);
+
+  // An integer which distinguishes the base field. 
+  //It becomes 1 if the base field changes. 
+  int abc=0; 
+
+  //If base field is Q or Z_p
+  if (typeof(Lring[1])=="int") 
+     {
+     list lili=Lring[1], list(@t), list(list("lp",intvec(1))), ideal(0);
+     Lring[1]=lili;
+     abc=1;
+     }
+     
+    //If the base field has already parameters. 
+   if (typeof(Lring[1])=="list" and size(Lring[1])==4 and abc==0)
+     {
+     Lring[1][2]=insert(Lring[1][2], @t);     // add new parameter with name
+                                              // what exists inside @t. 
+     Lring[1][3]=insert(Lring[1][3], list("lp",intvec(1)));  
+                                              // implement product ordering
+
+     abc=1; 
+     }
+     
+     
+     
+   if (abc==0)
+     {
+     "//** You are not allowed to work in this base ring. Please look at the
+      help section of the command you have used**";
+     }
+  else
+  {
+   return(Lring);
+   }
+ 
+} 
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),dp;
+    ringlist(basering);
+    //We add a new parameter called newpa.
+    addparam("newpa");
+}
+
+//----------------------------------------------------------------------
+proc cleardenommat (matrix A)
+"USAGE:
+    cleardenommat (matrix_expression)
+RETURN:
+    A list of a number k and a matrix B such that A=kB. 
+    This procedure multiplies a matrix  by a suitable constant to cancel all 
+    denominators from its coefficients and then divide it by its content. 
+    For this the matrix is changed to a vector and then cleardenom 
+    (vector_expression) is used.
+SEE ALSO: cleardenom, matrix  
+"
+{
+vector v; int i,j,s; s=1; int nc=ncols(A); int nr=nrows(A); matrix B[nr][nc];
+
+
+number cons; int inotzero,jnotzero;
+for (i=1;i<=nr;i=i+1) //This part find a non-zero coefficient of A
+     {
+       for (j=1;j<=nc;j=j+1)
+         { if (A[i,j]<>0){cons=leadcoef(A[i,j]); inotzero=i; jnotzero=j; 
+                i=nr+1;j=nc+1;}}
+     }
+
+
+
+for (i=1;i<=nr;i=i+1)
+    {
+    for (j=1;j<=nc;j=j+1)
+       {
+       v=v+A[i,j]*gen(s);
+       s=s+1; 
+       }
+    }
+v=cleardenom(v); s=1;
+for (i=1;i<=nr;i=i+1)
+    {
+    for (j=1;j<=nc;j=j+1)
+       {
+       B[i,j]=v[s]; 
+       s=s+1; 
+       }
+    }
+ matrix zerocheck=A; zerocheck=0;
+ list l;
+if (A==zerocheck) {cons=0;} else
+   { cons=cons/leadcoef(B[inotzero,jnotzero]);  
+   }
+l=cons,B;
+return(l);
+}
+example
+{"Example:"; echo=2;
+    ring r=0, (x,y),dp;
+    matrix A[1][2]=(4/3)*(x3+y3)-2*(x2+y2),2;
+    print(cleardenommat(A));
+}
+//---------------------------------------------------------------------------
+proc substpar(P, number para, poly Q) 
+"USAGE: 
+     substpar(poly_expression, par_expression, poly_expression)
+     substpar(matrix_expression, par_expression, poly_expression)
+     substpar(number_expression, par_expression, poly_expression)
+     
+RETURN:
+     The same as the first argument of the input,  except in the third case
+     which is a polynomial. It substitutes in parameter 'para' of 'P' the 
+     poynomial 'Q'. If one gets zero in the denominator then a 'Division by 
+     zero' is shown. If one tries to substitute a non constant polynomial in 
+     the denominator then 'Substitition of a polynomial in a denominator' is
+     shown. We have used 
+          subst(poly_expression, par_expression, poly_expression)
+     in this proceedure. 
+         
+SEE ALSO: 
+     cleardenommat, subst
+    
+EXAMPLE: 
+    example substpar; shows an example
+"
+{
+  poly denom;
+  list l;
+  string hefz=typeof(P);
+
+  if (typeof(P)=="poly" or typeof(P)=="number")
+    {matrix P1[1][1]=P;}                     //First we change P into a matrix.
+  if (typeof(P)=="matrix")
+    {matrix P1=P;}
+
+    l=cleardenommat(P1);
+    P1=numerator(l[1])*l[2];
+    P1=subst(P1, para,Q);
+    denom=subst( denominator(l[1]),para,Q);
+    if (leadcoef(denom)==denom)        //If in the denominator we have not a
+                                       //constant polynomial. 
+      {
+       if (denom==0) {"// ** Division by zero **";} 
+       else {
+             P1=(1/denom)*P1; 
+             if (hefz=="matrix"){return(P1);}
+             if (hefz=="poly"){return(P1[1,1]);}
+             if (hefz=="number")
+               {
+                 if (typeof(Q)=="number"){return(number(P1[1,1]));} 
+                 else{return(P1[1,1]);}
+               }
+            }
+      }
+    else {"// ** Substitition of a polynomial in a denominator **";}
+  
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),dp;
+    poly f=2*(t*x3+y3)/(t+1);
+    substpar(f,par(1),t^2-1);
+}
+//---------------------------------------------------------------------------
+proc dfwedge(poly f, matrix et)
+"
+USAGE:
+    dfwedge(poly_expression, matrix_expression)
+RETURN:    
+    This procedure takes the wedge product of df with the n-form et 
+    and return it as a polynomial.
+"
+{
+poly P=0; int i; int n=nvars(basering)-1;
+for (i=1;i<=n+1;i=i+1)
+    {P=P+(-1)^(i-1)*diff(f,var(i))*et[1,i];}
+return(P);
+}
+example 
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),dp;
+    poly f=2*(x3+y3)-3*(x2+y2);
+    dfwedge(f,eta());
+}
+//---------------------------------------------------------------------------
+static proc diffparpol(poly chuz, number parame)
+"
+USAGE: This proceedure takes the derivation of the polynomial 'chuz' with
+       respect to the parameter 'parame'. See diffpar for more details. 
+"
+    {
+       int mc;       //monomial counter of the entries of chiz 
+       poly komaki1, komaki2;  // In this poly we save the coefficients and 
+                               //then derivate them.
+       list lofmonom;   // list of derivated monomials of the entries of chiz
+       int s;           //To add the elements of the list together
+       poly Nom, Denom; //We separate denominator and numerator of a 
+                        //coefficient to be able to derivate it. 
+       poly dercoef;     //the derived coefficient is stored here.
+ 
+      for (mc=1;mc<=size(chuz);mc=mc+1)
+          {
+            Denom=denominator(leadcoef(chuz[mc]));
+            Nom=numerator(leadcoef(chuz[mc]));
+        
+            komaki1=subst(Nom, parame, var(1));    //The variable var(1) is 
+                                                  //used for derivation. 
+            komaki2=subst(Denom, parame, var(1));
+  
+            komaki1=diff(komaki1, var(1));
+            komaki2=diff(komaki2, var(1));
+  
+            komaki1=subst(komaki1, var(1),parame);
+            komaki2=subst(komaki2, var(1),parame);
+             
+            dercoef=leadmonom(chuz[mc])*(Denom*komaki1-Nom*komaki2)/Denom^2;
+            lofmonom=insert(lofmonom, dercoef);
+          }
+        chuz=0;
+        for (s=1;s<=size(lofmonom); s=s+1){chuz=chuz+lofmonom[s];}
+        return(chuz); 
+
+    }
+//--------------------------------------------------------------------------
+proc diffpar (chiz, number param)
+"USAGE: 
+     diffpar(poly_expression, par_expression)
+     diffpar(matrix_expression, par_expression)
+     diffpar(number_expression, par_expression)
+     
+RETURN:
+     The same as the first argument of the input. It takes the derivative of 
+     'chiz' with respect to the parameter 'param'.
+     It first separates the denominator and nominator of coefficients of 
+     'chiz' and then substitutes the first variable of the base ring for the 
+     parameter 'param' and then uses the command 'diff' to derivate both the 
+     denominator and nominator.
+SEE ALSO: 
+     diff
+    
+EXAMPLE: 
+    example diffpar; shows an example
+"
+{
+if (typeof(chiz)=="poly") 
+  {
+    return(diffparpol(chiz, param));
+  }
+
+if (typeof(chiz)=="matrix")
+ {
+ int i,j; //rows and columns counters of chiz
+ int nc=ncols(chiz); int nr=nrows(chiz);   
+   
+ for (i=1;i<=nr;i=i+1)
+   {
+     for (j=1;j<=nc; j=j+1)
+      {
+        chiz[i,j]=diffparpol(chiz[i,j],param);
+      }  
+   }
+ return(chiz);
+ } 
+if (typeof(chiz)=="number")
+  {
+    poly bia=chiz;
+    return(number(diffparpol(bia,param)));
+  }
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),dp;
+    poly f=2*(t*x3+y3)/(t);
+    diffpar(f,par(1));
+    matrix A[1][2]=f,x/(t+1);
+    print(diffpar(A,par(1)));
+}
+//--------------------------------------------------------------------------
+//---------------PROCEDURES RELATED TO A TAME POLYNOMIAL--------------------
+//--------------------------------------------------------------------------
+proc discriminant(poly f)        
+"USAGE:
+    discriminant(poly_expression)
+RETURN:
+    a number in the base field
+    This procedure takes f and find the matrix  A of multiplication by f 
+    in the Milnor vector space and then takes the determinant P=det(A).
+    The equation P=0 is the locus of parameters  in which f=0 is singular.
+SEE ALSO:
+    okbase
+EXAMPLE: 
+    example discriminant; shows an example     
+" 
+{
+ideal I=jacob(f);
+ideal gI=std(I);
+ideal V=okbase(gI);
+int mu=vdim(gI);
+if (mu<0)  {"// **", f, "is not a tame polynomial**";}
+if (mu==0) {return(1);}
+if (mu>0)
+      {
+      matrix A[mu][mu];
+      int s,i,k; poly h1;
+      for (k=1; k<=mu; k=k+1) {
+      h1=reduce(f*V[k], gI);
+      for (s=1; s<=size(h1); s=s+1) {
+      for (i=1; i<=mu; i=i+1) {   if ( leadmonom(h1[s]) == leadmonom(V[i]) )
+                         {A[k,i]=leadcoef(h1[s]);}                 }
+                                                                       }
+                              } 
+      number  sf=leadcoef(det(A));
+       
+      return(sf);
+      }
+}
+example 
+{"Example:"; echo=2;
+    ring r=(0,t,s), (x,y),dp;
+    poly f=2*(x3+y3)-3*(s*x2+y2)-t;
+    discriminant(f);
+}
+
+//---------------------------------------------------------------------------
+proc etaof(poly f, list #)
+"
+USAGE:
+     etaof(poly_expression)
+     etaof(poly_expression, number_expression, par_expression)
+RETURN:
+    This procedure calculates the discriminant 'S(s)' of 'f-s' for an 
+    additional parameter 's' , the n-differential form 'etaf' in 
+                                 'S(f)dx=df\wedge etaf'.
+     and returns a list. The first entry is the discriminant of of 'f' and 
+     the second entry is etaf  as '1*(n+1)' matrix, where 'n+1' is the 
+     number of variables.
+     If your polynomial is already of the form 'f-s', where 's' is a parameter
+     which does not appear in 'f' and you know a reduced form of the 
+     discriminant  of 'f' then give the reduced form and the parameter 's' 
+     as the second and third entries, respectively. This may be useful 
+     because in general the discriminant is a huge rational function in 
+     parameters.                                              
+SEE ALSO:
+    discriminant, addparam, substpar     
+ EXAMPLE: 
+    example etaof; shows an example                                                   
+"
+{
+
+if (size(#)==0)
+   {
+    // Set up new ring with an additional parameter @@t and make it the active ring: 
+    //======
+    def prevRing=basering;
+    def newRing=ring(addparam("@@t")); //Note that in the new ring par(1)=@@t
+    setring newRing;
+    poly f=imap(prevRing, f);
+    poly newf;
+
+    //Starting to calculate in the new ring.
+    newf=f-par(1);
+    number Sf=discriminant(newf);
+    number delta=number(substpar(Sf, par(1),0)); 
+
+    poly Sff=substpar(Sf, par(1),f);
+    matrix etif=transpose( division(Sff, jacob(f))[1]   );
+
+    int i; int n=ncols(etif)-1;  //The entries of the division by jacob(f) of 
+                                              //Sff differs from the entries
+                                              //of the differential form eta_f by some minus ones!
+   for (i=1;i<=n+1;i=i+1)
+       {                         
+       etif[1,i]=(-1)^(i-1)*etif[1,i];
+       }
+
+   //Getting back to the previous ring
+   setring prevRing;
+   number delta=number(imap(newRing,delta)); //Here I do not know why imap changes 
+                                          //delta to a poly. For this reason I 
+                                          //have put number() 
+   matrix   etif=imap(newRing, etif);
+
+   list finaly=delta, etif;
+   return(finaly);
+   }
+else
+   {
+    poly Sff=substpar(#[1], #[2], f+#[2]);
+    list afterdiv=division(Sff, jacob(f));
+    if (afterdiv[2]==0)
+       {  
+           matrix etif=transpose(afterdiv[1]);
+
+            int i; int n=ncols(etif)-1;  //The entries of the division by jacob(f) of 
+                                              //Sff differs from the entries
+                                              //of the differential form eta_f by some minus ones!
+            for (i=1;i<=n+1;i=i+1)
+               {                         
+               etif[1,i]=(-1)^(i-1)*etif[1,i];
+                }
+             list finaly=#[1], etif;
+              return(finaly);
+        }else {"// **", #[1], "does not work**";}
+   }
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),dp;
+    poly f=2*(t*x3+y3-t*x);
+    etaof(f);
+}
+//--------------------------------------------------------------------------
+proc infoof (poly f, list #)
+"USAGE:
+    infoof(poly_expression)
+    infoof(poly_expression, number_expression, matrix_expression)   
+RETURN:
+    This procedure gives us the following list of objects calculated
+    from a tame polynomial:
+    1. The last homogeneous piece 'g' of 'f',
+    2. the jcobian ideal of 'g', 'I=jacob(g)',
+    3. the polynomial 'f1=f-g',
+    4. the jacobian ideal of 'f1', 'I1=jacob(f1)',
+    5. the jacobian ideal of 'f', 'I2=jacob(f)',
+    6. the standard basis of 'I', 'gI=std(I)', if the list # has less than three
+    entries. If not then the procedure uses  'groebner'.
+    7. 'V=okbase(gI)',
+    8. the Milnor number 'mu=vdim(gI)',
+    9. the discriminant of f, 'delta=discriminant(f)',
+    10. the differential n-form 'eta' with 'S(f)dx=df wedge eta', where
+       S(s) is the discriminant of f-s. 
+     If you already know the delta and eta then give them as the second and third
+     entries. Note that we have to multiply  the  i-th entry of 
+      'transpose(division(S(f), jacob(f))[1])' with '(-1)^(i-1)' in order to obtain eta.
+
+    This procedure is created because I want to avoid calculating the same
+    objects many times in the procedures of this library.
+ 
+ SEE ALSO:
+    okbase, jacob, std, groebner, vdim, lasthomo, etaof.
+  
+EXAMPLE: 
+    example infoof; shows an example
+"
+{
+
+list final;
+poly g=lasthomo(f);   final=g; 
+ideal I=jacob(g);     final=insert(final, I, 1);
+poly f1=f-g;          final=insert(final, f1, 2);
+ideal I1=jacob(f1);   final=insert(final, I1, 3);
+ideal I2=jacob(f);    final=insert(final, I2, 4);
+
+ideal gI=std(I);  final=insert(final, gI, 5);
+//You may want to use here groebner instead of std
+
+ideal V=okbase(gI);   final=insert(final, V, 6);
+int mu=vdim(gI);      final=insert(final, mu, 7);
+  if (size(#)==2){list da=#;} 
+  else{list da=etaof(f);}     
+                      final=insert(final, da[1], 8);
+                      final=insert(final, da[2], 9);
+
+
+return(final);
+}
+example
+{"EXAMPLE:"; echo=2;
+    ring r=(0,t(0..3)), (x,y),wp(2,3);
+    poly f=y^2-4*t(0)*(x-t(1))^3+t(2)*(x-t(1))+t(3); 
+    infoof(f);
+    list genkin=etaof(f);
+    infoof(f,genkin);  
+}
+//--------------------------------------------------------------------------
+static proc dAbeta(poly P)
+
+"RETURN:
+   This procedure multiplies the polynomial P with all variables of the 
+   base ring and then takes degree. 
+NOTE:
+   It is used in linear1 and linear2.   
+"
+{
+poly Q=P;
+int n=nvars(basering)-1;
+for (int i=1;i<=n+1; i=i+1){Q=Q*var(i);}
+return(deg(Q));
+}
+//-----------------------------------------------------------------------
+static proc epsilon(int i, int j)
+"RETURN:
+   1 or 0 depending if i>j or not.
+"
+{
+int k=0;
+if (i>j) {k=1;}
+return(k);
+}
+//----------------------------------------------------------------------
+static proc linear1 (poly P, list lula)   
+"USAGE:
+   linear1(poly_expression, list_expresion) 
+RETURN:
+    A list with three entries. The list lula is the output list of 'infoof'. 
+    This procedure takes a homogeneous polynomial g  and  a (n+1)-form [Pdx] 
+    in the Brieskorn  module H'', where (n+1) is the number of variables of 
+    the base ring,  and write [Pdx] as a linear combination of [V[1]dx], 
+    [V[2]dx],..., where V is produced by okbase(g). 
+    The output is a list. The first entry is a 1*mu matrix C containing the 
+    coefficients of [V[1]dx],[V[2]dx],..., where mu is the Milnor number of g 
+    If n>0 the second is a mu*mu matrix representing the (n-1)-form xi such 
+    that Pdx=C[1,1]*V[1]dx+C[1,2]*V[2]dx+...+df\wedge d(xi). The base ring 
+    must contain at  least one parameter and C is written in the first 
+    parameter. In this case the third entry is zero.
+    If n=0 then the output list has third entry p_of_g. This is a polynomial
+    in the first parameter of the base ring such that Pdx=C[1,1]*V[1]dx+
+    C[1,2]*V[2]dx+...+p_of_g(f)f'dx. In this xi is 1*1 zero matrix. 
+    The first parameter of the base ring is reserved for the computer.
+SEE ALSO:
+    divmat
+    
+"
+{
+poly g=lula[1];
+ideal I=lula[2];
+ideal gI=lula[6];
+int mu=lula[8];
+ideal V=lula[7];
+int n=nvars(basering)-1;
+int d=deg(g);
+
+matrix C[1][mu];
+matrix eta[n+1][1];
+matrix xi[n+1][n+1];  //In this matrix we keep the (n-1)-form which appears
+                      //in the equality.
+int pg=0;             //this natural number is for the powers of g
+poly p_of_g;          //In the case n=0, dAbeta-deg(V[i]) can be zero. 
+                      //In this we do not have xi as above but a function 
+                      //of g. The p_of_g(g)g' is zero in H'' 
+
+list l;
+int i;int j; int s; int k; 
+poly c; poly P1=P;
+
+while (P<>0)
+   { 
+   l=divmat(P, I, V); 
+   P=0;
+   C=C+l[2]*par(1)^pg; eta=l[1];  
+   for (i=1;i<=n+1;i=i+1)
+    {
+      k=size(eta[i,1]);
+      for (s=1;s<=k; s=s+1)
+      {
+      c=dAbeta(eta[i,1][s])-deg(var(i));  
+        
+        if (c==0){p_of_g=p_of_g+eta[i,1][s]*par(1)^pg;} 
+                              //This happens only in the case n=0 
+        else
+        {
+        P=P+ (d/c)*diff(eta[i,1][s], var(i));  
+            for (j=1;j<=n+1;j=j+1)
+                { 
+                 if (j<>i) 
+                   {
+                   xi[i,j]=xi[i,j]+g^(pg)*    
+                   (-1)^(i+j+1+epsilon(i,j))*
+                    (var(j)*eta[i,1][s]*deg(var(j))/c); 
+                  
+                   }
+                }
+      
+        }
+      }
+    }
+   pg=pg+1;  
+   }
+
+for (j=1;j<=n+1;j=j+1) 
+    {
+    for (i=1;i<j;i=i+1){xi[i,j]=xi[i,j]+xi[j,i]; xi[j,i]=0;} 
+    }
+list ll=C, xi, p_of_g;
+return(ll);  
+}
+//---------------------------------------------------------------------------
+static proc linear2 (poly P, list lula)
+"
+USAGE: 
+    From a n-form in C^{n+1} we have already taken differential and  
+    the polynomial appearing in its differential is represented by P.
+RETURN:
+    A list with three entries. The list lula is the output list of 'infoof'.
+    This procedure takes a homogeneous polynomial g  and  the differential 
+    of a n-form P1, namely  [Pdx], where (n+1) is the number of variables of 
+    the base ring,  and write the n-form P1 as a linear combination of 
+    the standard basis of H' [V[1] eta/d], [V[2] eta/d],..., where d is the 
+    degree of g. 
+    The output is a list. The first entry is a 1*mu matrix C containing the 
+    coefficients of [V[1] eta/d],[V[2] eta/d],..., where mu is the Milnor 
+    number of g. 
+    If n>0 the second  is  mu*mu matrices representing  the (n-1)-form xi  
+    such that P -C[1,1]*V[1] eta/d-C[1,2]*V[2] 
+    eta/d-...+df\wedge xi is exact(Note the sum addition attached to  term of 
+    xi). In this case the third entry is zero. 
+    The base ring must contain at  least one parameter and C is written 
+    in the first parameter.
+    If n=0 then the output list has third entry p_of_g. This is a polynomial
+    in the first parameter of the base ring such that  P1 -C[1,1]*V[1] 
+    eta/d-C[1,2]*V[2]eta/d-... is of the form p(g) and derivation of p  is 
+    equal to p_of_g. In this xi is 1*1 zero matrix.
+    The first parameter of the base ring is reserved for the computer.
+SEE ALSO:
+    substpar 
+     
+"
+{
+poly g=lula[1];
+ideal V=lula[7];
+int n=nvars(basering)-1; int d=deg(g); 
+int mu=lula[8]; 
+int i, j;
+ideal I=lula[2];
+ideal gI=lula[6];
+
+list l=linear1(P,lula);
+
+matrix C=substpar(l[1], par(1),var(1));  //We do not have the degree 
+                                      //of a polynomial in parameter.
+                                      //For this reason we use var(1) 
+
+matrix C1[1][mu];
+for (i=1; i<=mu; i=i+1)
+    {
+    for (j=1;j<=size(C[1,i]); j=j+1)
+        {
+        C1[1,i]=C1[1,i]+ deg(var(1))*d*C[1,i][j]/(dAbeta(V[i])*deg(var(1))+d*deg(C[1,i][j]));
+        }
+    }
+C1=subst(C1, var(1),par(1));
+ l=C1, l[2],l[3];  //Note that l[3] is the reminder of P
+return(l);
+}
+//----------------------------------------------------------------------
+proc linear (poly f, poly P, list #)
+"
+USAGE:
+    linear(poly_expression, poly_expression)
+    linear(poly_expression, poly_expression, list_expression)
+RETURN:
+    A list.
+    This procedure takes a tame polynomial f  and  a (n+1)-form [Pdx] in the 
+    Brieskorn  module H'', where (n+1) is the number of variables of the base 
+    ring,  and write [Pdx] as a linear combination of [V[1]dx], [V[2]dx],..., 
+    where V is produced by okbase(g) and g is the last homogeneous part of f. 
+    The output is a list. The first entry is a 1*mu matrix C 
+    containing the coefficients of [V[1]dx],[V[2]dx],..., where mu is the 
+    Milnor number of f. 
+    If n>0 then the second entry is a mu*mu matrix representing the 
+    (n-1)-form xi such that 
+      Pdx=C[1,1]*V[1]dx+C[1,2]*V[2]dx+...+df\wedge d(xi) mod <f>.
+
+    If n=0 then the second  entry of the output is p_of_g.  This is a number 
+    in the base ring such that 
+           Pdx=C[1,1]*V[1]dx+C[1,2]*V[2]dx+...+p_of_g f'(x)dx mod <f>. 
+    In this case xi is a 1*1 zero matrix. 
+    The third optional entry is a list as the output of 'infoof'. 
+SEE ALSO:
+    addparam, substpar, infoof   
+EXAMPLE: 
+    example linear; shows an example
+" 
+{
+
+list lula; 
+if (size(#)<>0){lula=#;}
+else    {lula=infoof(f);} 
+
+
+// Set up new ring with an additional parameter @@t and make it the active ring: 
+//==================================== 
+def prevRing=basering;
+def newRing=ring(addparam("@@t")); //Note that in the new ring par(1)=@@t
+setring newRing;
+poly f=imap(prevRing, f);
+poly P=imap(prevRing, P);
+list lula=imap(prevRing,lula);
+       
+
+//Starting to calculate in the new ring.
+
+
+  poly g=lula[1]; 
+  poly f1=lula[3]; 
+  ideal I=lula[2]; ideal I1=lula[4];
+   ideal gI=lula[6];
+   int mu=lula[8];
+   ideal V=lula[7];
+ 
+
+list l;
+int n=nvars(basering)-1;
+poly P1=P;
+int i,j;
+
+matrix C[1][mu]; matrix Cp[1][mu]; 
+matrix xi[n+1][n+1]; matrix xip[n+1][n+1]; //These represents n-forms 
+poly p_of_g; poly p_of_gp;
+
+while (P<>0)
+ {
+ l=linear1(P,lula);  
+ C=C+l[1]; Cp=l[1]; xip=l[2]; xi=xi+l[2]; 
+ p_of_g=p_of_g+l[3]; p_of_gp=l[3];  
+ P=0;
+ for (i=1;i<=mu;i=i+1) 
+     {P=P+(substpar(Cp[1,i],par(1),g)-substpar(Cp[1,i],par(1),f))*V[i];}
+
+ if (n==0) {P=P+ diff(g,var(1))*substpar(p_of_gp, par(1),g)-
+                 diff(f,var(1))*substpar(p_of_gp, par(1),f);}
+
+ for (j=1;j<=n+1;j=j+1)
+     { 
+    for (i=1;i<j;i=i+1)
+        {
+        P=
+        P-(-1)^(i+j)*( I1[j]*diff(xip[i,j], var(i))-I1[i]*diff(xip[i,j], 
+        var(j)));
+        }
+     }
+ }
+
+//---------check
+ideal I2=jacob(f);
+poly check=-P1;
+for (i=1;i<=mu;i=i+1)
+      {check=check+substpar(C[1,i], par(1),f)*V[i];}
+
+for (j=1;j<=n+1;j=j+1) 
+    {
+    for (i=1;i<j;i=i+1)
+        {
+        check=check+
+        (-1)^(i+j)*(I2[j]*diff(xi[i,j], var(i))-I2[i]*diff(xi[i,j], var(j)));
+        } 
+    }
+ if (n==0) {check=check+diff(f,var(1))*substpar(p_of_g, par(1),f);}
+//---------
+C=substpar(C, par(1),0);
+xi=substpar(xi,par(1),0);
+p_of_g=substpar(p_of_g,par(1),0);
+if (n==0) {l= C, xi, p_of_g;} else {l= C, xi;}
+
+//Getting back to the previous ring
+setring prevRing;
+list l=imap(newRing,l);
+poly check=imap(newRing,check);
+
+ 
+if (check==0)
+   {return(l);}
+else {"// ** The procedure linear has failed for your example. Please report this to Hossein  Movasati **";}
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),dp;
+    poly f=2*(x3+y3)-3*(x2+y2);
+    linear(f-t, x+y-xy+x2);
+}
+//---------------------------------------------------------------------------
+proc linearp (poly f, matrix P,list #)
+"
+USAGE:
+    linearp(poly_expression, matrix_expression)
+    linearp(poly_expression, matrix_expression, list_expression)
+RETURN:
+    A list.
+    This procedure takes a tame polynomial f  and  a n-form P in the Brieskorn 
+    module H', where (n+1) is the number of variables of the base 
+    ring,  and write [P] as a linear combination of [V[1] eta/d], [V[2] eta/d],
+    ..., where V is produced by okbase(g), g is the last homogeneous part 
+    of f and d is the degree of f.  
+    The output is a list. The first entry is a 1*mu matrix C containing 
+    the coefficients of [V[1] eta/d],[V[2] eta/d],..., where mu is the Milnor 
+    number of f.
+    If n>0 then the second entry is a  mu*mu matrices representing 
+    the (n-1)-form xi  such that 
+     P -C[1,1]*V[1] eta/d-C[1,2]*V[2]eta/d-...-df\wedge xi is exact mod <f>.
+ 
+    If n=0 then the second entry is p_of_g. In this case 
+                  P -C[1,1]*V[1] eta/d-C[1,2]*V[2]eta/d-... mod <f>
+    is a number in the base ring mod. To see the relation between this number
+    and p_of_g see the version<1.2 of the procedure.
+    In this case xi is 1*1 zero matrix. 
+SEE ALSO:
+    eta, difofn, addparam, substpar, infoof
+EXAMPLE: 
+    example linearp; shows an example
+
+"
+{
+
+list lula; 
+if (size(#)<>0){lula=#;}
+else    {lula=infoof(f);} 
+
+// Set up new ring with an additional parameter @@t and make it the active ring: 
+//==================================== 
+def prevRing=basering;
+def newRing=ring(addparam("@@t")); //Note that in the new ring par(1)=@@t
+setring newRing;
+poly f=imap(prevRing, f);
+matrix P=imap(prevRing, P);
+list lula=imap(prevRing, lula);
+  
+
+//Starting to calculate in the new ring.
+list l;
+
+  poly g=lula[1]; poly f1=lula[3];
+  ideal I=lula[2]; ideal I1=lula[4]; 
+  ideal gI=lula[6];
+  int mu=lula[8];
+  ideal V=lula[7];
+  int d=deg(g);
+  matrix etaaa=eta()/d;
+
+
+matrix P1=P;
+int n=nvars(basering)-1;
+int i,j;
+ matrix C[1][mu]; matrix Cp[1][mu]; //This matrices contain the coefficients
+                                    //of V[i]. C contains the result and Cp
+                                    // is for calculations
+matrix xi[n+1][n+1]; matrix xip[n+1][n+1];
+                                   //The n-1 form
+ poly p_of_g, p_of_gp;             //In the case n=0, we have not the n-form
+                                   //xi but a polynomial p_of_g 
+
+poly R=difofn(P);  
+while (R<>0)
+ {
+ l=linear2(R,lula);    
+ C=C+l[1]; Cp=l[1]; 
+ xip=l[2]; xi=xi+(-1)*l[2];
+ p_of_gp=l[3]; p_of_g=p_of_g+l[3];
+ P=0; R=0;
+ for (i=1;i<=mu;i=i+1) 
+     {P=P+(substpar(Cp[1,i],par(1),g)-substpar(Cp[1,i],par(1),f))*V[i]*etaaa;}
+ R=R+difofn(P);
+ 
+ if (n==0) {R=R+ diff(g,var(1))*substpar(p_of_gp, par(1),g)-
+                 diff(f,var(1))*substpar(p_of_gp, par(1),f);}
+ 
+
+for (j=1;j<=n+1;j=j+1)
+     { 
+    for (i=1;i<j;i=i+1)
+        {
+        R= R-(-1)^(i+j)*( I1[j]*diff(xip[i,j], var(i))-I1[i]*diff(xip[i,j], 
+        var(j)));
+        }
+     }
+ 
+ }
+
+//---------check
+ideal I2=jacob(f);
+matrix check=-P1;
+for (i=1;i<=mu;i=i+1)
+      {check=check+substpar(C[1,i], par(1),f)*V[i]*etaaa;} 
+
+for (j=1;j<=n+1;j=j+1) 
+    {
+    for (i=1;i<j;i=i+1)
+        {
+        check[1,i]=check[1,i]+ (-1)^(j)*I2[j]*xi[i,j];
+        check[1,j]=check[1,j]+(-1)^(i-1)*I2[i]* xi[i,j];
+        }
+    }
+
+poly check1=difofn(check); 
+
+
+if (n==0) {check1=check1+diff(f,var(1))*substpar(p_of_g, par(1),f);}
+//---------
+
+C=substpar(C,par(1),0);
+xi=substpar(xi,par(1),0);
+p_of_g=substpar(p_of_g,par(1),0); 
+if (n==0) {l= C, xi, p_of_g;} else {l=C, xi;}
+
+
+//Getting back to the previous ring
+setring prevRing;
+list l=imap(newRing,l);
+poly check1=imap(newRing,check1);
+
+
+if (check1==0)
+   {return(l);}
+else { 
+"// ** The procedure linear has failed for your example. Please report this to Hossein  Movasati **";}
+
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),dp;
+    poly f=2*(x3+y3)-3*(x2+y2);
+    linearp(f-t, x^2*y*eta());
+}
+//---------------------------------------------------------------------------
+static proc QP(poly P, matrix p)
+"
+This procedure is used in gaussmaninp. It is different from QP
+procedure before the version 1.2. matrix p is transposed. It represents
+a differential form. 
+"
+{  
+       poly Q_P=0; int i; int n=ncols(p)-1;
+       for (i=1; i<=n+1; i=i+1) 
+        {
+        Q_P= Q_P+diff(P, var(i))* (-1)^(i-1)*p[1,i]+
+                (-1)^(i-1)*P*diff(p[1,i], var(i));
+        }
+    return(Q_P);
+}
+//---------------------------------------------------------------------------
+proc gaussmanin(poly f, list paramlist, diform, list #)
+"
+USAGE:
+    gaussmanin(poly_expression, list_of_par_expression, poly_expression)
+    gaussmanin(poly_expression, list_of_par_expression, matrix_expression)
+    gaussmanin(poly_expression, list_of_par_expression, poly_expression,
+    list_expression)
+    gaussmanin(poly_expression, list_of_par_expression, matrix_expression,
+    list_expression)
+RETURN:
+    A list of a number and matrices.
+    This proceedure calculates the Gauss-Manin connection of the differential 
+    form 'diform' with respect to the parameters in 'paramlist' and the fibration  
+    'f=0'. Here diform is eigther a polynomial or a 1*(n+1) matrix. In the first
+    case the differential (n+1)-form diform*dx in the Brieskorn module H'' is
+    considered and in the second case the differential n-form in the Brieskorn
+    module H' obtained by the entries of diform is considered. 
+    Note that for n=0, diform as a 1*1 matrix  and as a polynomial/number/integer
+    are different.
+    The fourth optional list is the same as the output of 'infoof'.    
+    The Gauss-Manin connection with respect to the i-th parameter of 'paramlist' 
+    is the multilication of the first entry of the output with (i+1)-th entry of
+    the output.
+SEE ALSO: 
+    difofn, linearp, infoof, dfwedge, diffpar.     
+EXAMPLE: 
+    example gaussmanin; shows an example
+" 
+{
+
+//First we obtain the information of f
+list lula;
+  if (size(#)==0){lula=infoof(f); }
+  else {lula=#;}
+
+number delta=lula[9]; matrix eti=lula[10];
+
+//Now we start to calculate
+int i; //this integer counts the number of parameters.
+int nump=size(paramlist);
+int n=nvars(basering)-1;
+matrix komaki[1][n+1]; 
+matrix komaki1[1][n+1];
+matrix komaki2[1][n+1];
+poly komaki3;
+poly komaki4;
+poly forother;
+list finallist=1/delta;
+
+
+
+if (typeof(diform)=="matrix")
+   {   
+       for (i=1;i<=nump;i=i+1)
+       {
+       komaki1=delta*diffpar(diform, paramlist[i]);
+       komaki3=diffpar(f, paramlist[i])* difofn(diform);
+       komaki2=komaki3*eti;
+       komaki=komaki1-komaki2; 
+       finallist=insert(finallist, linearp(f,komaki,lula)[1], size(finallist));
+       }
+    }      
+if (typeof(diform)=="poly" or typeof(diform)=="number" or typeof(diform)=="int")
+   {      
+       for (i=1;i<=nump;i=i+1)
+       {  
+       komaki1=diform*eti;   
+       komaki3=dfwedge(f,diffpar(komaki1,paramlist[i]));
+       komaki4=diffpar(f, paramlist[i])*QP(diform, eti);
+       forother=komaki3-komaki4-diform*diffpar(delta,paramlist[i]);
+       finallist=insert(finallist, linear(f,forother,lula)[1], size(finallist));
+       }
+    }        
+       
+   
+
+return(finallist);     
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t(0..3)), (x,y),wp(2,3);
+    poly f=y^2-4*t(0)*(x-t(1))^3+t(2)*(x-t(1))+t(3); 
+    list l=t(0),t(1),t(2),t(3); 
+    gaussmanin(f, l,eta()/6);
+    gaussmanin(f,l,x*y);
+}
+//---------------------------------------------------------------------------
+proc gaussmaninvf(poly f, vector vecfield, diform, list #)
+"
+USAGE:
+    gaussmaninvf(poly_expression, vector_of_numbers, poly_expression)
+    gaussmaninvf(poly_expression,  vector_of_numbers, matrix_expression)
+    gaussmaninvf(poly_expression, vector_of_numbers, poly_expression, 
+    list_expression)
+    gaussmaninvf(poly_expression, vector_of_numbers, matrix_expression,
+    list_expression)
+RETURN:
+    A list of a number and an object same as the third entry.
+    This proceedure calculates the Gauss-Manin connection of the differential  
+    form 'diform'  in direction of the vector field 'vecfield'  and associated to the 
+    fibration  'f=0'. 
+    Here diform is eigther a polynomial or a 1*(n+1) matrix. In the first case the 
+    differential (n+1)-form diform*dx in the Brieskorn module H'' is considered 
+    and in the second case the differential n-form in the Brieskorn module H' 
+    obtained by the entries of diform is considered. 
+    Note that for n=0, diform as a 1*1 matrix  and as a polynomial/number/integer
+    are different.
+    The fourth optional list is the same as the output of 'infoof'.  
+    In principal, one could use the procedure 'gaussmaninmatrix' or  'gaussmanin' 
+    and construct this procedure. In both cases one does some extra calculations 
+    which are not necessary for the purpose of 'gaussmaninvf'. 
+    This procedure is obtained by some minor modifications of 'gaussmanin'. 
+SEE ALSO: 
+    difofn, linearp, infoof, dfwedge, diffpar.     
+EXAMPLE: 
+    example gaussmaninvf; shows an example
+" 
+{
+
+//First we obtain the information of f
+list lula;
+  if (size(#)==0){lula=infoof(f); }
+  else {lula=#;}
+
+number delta=lula[9]; matrix eti=lula[10];
+
+//Now we start to calculate
+int i; //this integer counts the number of parameters.
+int nump=npars(basering);
+int n=nvars(basering)-1;
+matrix komaki[1][n+1]; 
+matrix komaki1[1][n+1];
+matrix komaki2[1][n+1];
+poly komaki3;
+poly komaki4;
+poly forother;
+list finallist=1/delta;
+int mu=lula[8];
+int degf=deg(f);
+ideal V=lula[7];
+
+if (typeof(diform)=="matrix")
+   {  
+      matrix result[1][n+1]; //the result of the Gauss-Manin connection 
+                                           //without the discriminant.
+       for (i=1;i<=nump;i=i+1)
+       {
+       komaki1=delta*diffpar(diform, par(i));
+       komaki3=diffpar(f, par(i))* difofn(diform);
+       komaki2=komaki3*eti;
+       komaki=komaki1-komaki2; 
+       komaki=vecfield[i]*komaki;
+       result=result+komaki;
+       }
+    
+    
+    matrix BP=linearp(f, result,lula)[1];
+    result=0;
+    for (int j=1; j<=mu;j=j+1){result=result+BP[1,j]*V[j]*eta()/degf;}
+    finallist=insert(finallist, result, size(finallist));
+    
+    
+    }      
+if (typeof(diform)=="poly" or typeof(diform)=="number" or typeof(diform)=="int")
+   { 
+       poly result;                 //the result of the Gauss-Manin connection 
+                                            //without the discriminant.
+       for (i=1;i<=nump;i=i+1)
+       {  
+       komaki1=diform*eti;   
+       komaki3=dfwedge(f,diffpar(komaki1,par(i)));
+       komaki4=diffpar(f, par(i))*QP(diform, eti);
+       forother=komaki3-komaki4-diform*diffpar(delta,par(i));
+       forother=vecfield[i]*forother;
+       result=result+forother; 
+       }
+       
+       matrix BP=linear(f,result,lula)[1];
+       result=0;
+       for (int j=1; j<=mu;j=j+1){result=result+BP[1,j]*V[j];}
+       //In general PP gets bigger and bigger and even for some simple examples
+       //we get memory problems. For this reason we have reduced PP in H' or H''
+       //to a simpler form. 
+       finallist=insert(finallist, result, size(finallist));    
+    }        
+ 
+ 
+return(finallist);     
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t(0..3)), (x,y),wp(2,3);
+    poly f=y^2-4*t(0)*(x-t(1))^3+t(2)*(x-t(1))+t(3); 
+    vector ve=[0,0,0,1];
+    gaussmaninvf(f, ve,eta()/6);
+    gaussmaninvf(f,ve,x*y);
+}
+//----------------------------------------------------------------------------
+proc PFequ (poly f, P, vector vecfield, list #)
+"USAGE:
+    PFeq (poly_expression, poly_expression, vector_of_numbers);
+    PFeq (poly_expression, matrix_expression, vector_of_numbers);
+    PFeq (poly_expression, poly_expression, vector_of_numbers, list_expression);
+    PFeq (poly_expression, matrix_expression, vector_of_numbers, list_expression);
+    
+    
+RETURN: 
+    '1*(od+1)' matrix 'A', where 'od' is a number less than  the Milnor number
+     of 'f'. 
+    It calculate the Picard-Fuchs equation of the (n+1)-form (resp. n-form as
+    a '1*(od+1)' matrix 'P' in the Brieskorn module H'' (resp. H') with respect to 
+    the fibration 'f=0' and in the direction of the vector field 'vecfield'. If you want 
+    to find the Picard-Fuchs equation with respect to a parameter then create a
+    vector of size 'k', where k is the number of parameters of the base ring. Then
+    put zero in all entries of the vector except in the entry which corresponds to
+    your parameter. You put there, the number 1.  
+    The obtained Picard-Fuchs equation is 
+                A[1,1]+A[1,2]d/dt+...A[1,od+1]d^od/dt^od=0   
+    The fourth optional list is the same as the output of 'infoof'.
+NOTE:
+    This procedure usese gaussmaninvf. In general it is faster than 'PFeq'. 
+SEE ALSO: 
+    cleardenommat, gaussmaninvf, submat, infoof
+EXAMPLE: 
+    example PFequ; shows an example
+"
+
+{
+//First we obtain the information of f
+list lula;
+if (size(#)==0){lula=infoof(f); }
+else {lula=#;}
+
+
+int mu=lula[8];
+matrix BP[1][mu];    //In this matrix we write P in the canonical basis of H' or H''
+
+
+
+int nuit=0;              //It counts the number of iterations of the 
+                               // the Gauss-Manin connection
+int  i,j, beta; beta=1;
+matrix pf[mu+1][mu+1];   //This matrix keeps the coefficients of GM(P)'s
+     
+for (i=1;i<=mu+1; i=i+1){pf[i,i]=1;}  //The identity matrix 
+
+matrix B[mu+1][mu];      //In this matrix we keep GP^k(P)'s without 
+                         //modification. We need it at the end to check our
+                         //result. 
+matrix A[mu+1][mu];      //The main operation is done on this matrix.
+                         //GP^k(P) are stored in A 
+poly ge;
+intmat sotun[1][mu];     //The sotun[1,i] is the first A[1,i] which is not 
+                         //zero, every time that we modify A. 
+                         
+                         
+                         
+                         
+                         
+                         
+ 
+number delta=lula[9];
+                    //We need the derivation of the discriminant along the vector field.
+ideal V=lula[7];
+poly dvecdelta;
+int nofpars=npars(basering);
+for (i=1;i<=nofpars;i=i+1)
+      {dvecdelta=dvecdelta+diffpar(delta, par(i))*vecfield[i];}
+
+
+
+list resofgm;
+string typeofP;
+if (typeof(P)=="matrix")
+       {matrix PP=P; typeofP="matrix";}
+    if (typeof(P)=="poly" or typeof(P)=="number" or typeof(P)=="int")
+       {poly PP=P; typeofP="poly";}
+        //We need PP when P is a polynomial/integer/number 
+
+while (nuit==0)
+  {
+     
+    //The iteration of PP beta-1 times under the Gauss-Manin connection.
+    //Note that PP is already iterated beta-2 times.
+    
+    if (beta>1)
+    {
+     resofgm=gaussmaninvf(f,vecfield, PP,lula);
+     PP=resofgm[2]-(beta-2)*dvecdelta*PP;
+    }
+    
+     
+     if (typeofP=="matrix")
+       {
+       BP=linearp(f, PP,lula)[1];
+       }
+    if (typeofP=="poly")
+       {
+       BP=linear(f,PP,lula)[1];
+       }
+        
+    A[beta,1..mu]=BP;
+    B[beta,1..mu]=BP;
+    
+    for (j=1;j<=beta-1;j=j+1)
+      {
+        ge=-A[beta,sotun[1,j]]/A[j,sotun[1,j]]; 
+        A[beta,1..mu]=
+        submat(A, beta,1..mu)+ge*submat(A,j,1..mu);
+        pf[beta,1..mu+1]=submat(pf, beta,1..mu+1)+ 
+        ge*submat(pf, j,1..mu+1);   
+      }
+    i=1;
+     while (A[beta,i]==0 and i<mu ) {i=i+1;}
+     if (i==mu and A[beta,mu]==0) {nuit=beta;} 
+     else {sotun[1,beta]=i; beta=beta+1;}
+      
+  }
+  
+  
+matrix final=submat(pf, nuit,1..nuit); 
+                     //We use '1..nuit' because after 'nuit' the entries are zero
+//-------Check---------
+ matrix check[1][mu]; poly check1;
+ for (i=1;i<=nuit;i=i+1) {check=check+submat(B,i,1..mu)*final[1,i];}
+ for (i=1;i<=mu;i=i+1) {check1=check1+check[1,i];}
+//-------------------------------------------
+
+for (i=1;i<=nuit; i=i+1){final[1,i]=final[1,i]*delta^(i-1);} 
+              //This is becuase the matrices A,B contains the iteration of the Gauss-Manin
+              //connection multiplies by some power of the discriminant.
+ if (check1==0) {return(cleardenommat(final)[2]);}
+ else
+ {"// ** The procedure PFequ has failed for your example. 
+      Please report this to Hossein  Movasati **";}
+
+
+}
+
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),wp(2,3); 
+    //The differential form dx/y in the Brieskon module H'' is -2dxdy 
+    poly L=y^2-x*(x-1)*(x-t); //Legendre equation.
+    vector ve=[1];
+    PFequ(L, poly(-2),ve);
+    poly W=y^2-x^3+3*t*x-2*t; //Weierstrass family.
+    PFequ(W,poly(-2),ve);
+    poly E=y^2-x^3+2*x^2-(1-t)*x; //A family of elliptic curves with a
+    PFequ(E,poly(-2),ve);                  //distinguished 2-torsion point. 
+    //An example in the Brieskorn module H'
+    PFequ(E, eta(), ve);             
+ 
+}
+
+//---------------------------------------------------------------------------
+proc gaussmaninmatrix(poly f, list paramlist, int which, list #)
+"
+USAGE:
+    gaussmaninmatrix(poly_expression, list_of_par_expression, int_expression)
+    gaussmaninmatrix(poly_expression, list_of_par_expression, int_expression,
+    list_expression) 
+RETURN:
+    It returns a list of a number 1/delta and matrices A1, A2,.... which satisfy
+            nabla(omega)=1/delta(A1 dt1+ A2 dt2+....) omega
+    where omega is the canonical bases (obtained by 'okbase') of the Brieskorn
+    module H' if 'which=1' respectively H'' if 'which=2', and 't1,t2,...' are
+    the parameters in 'paramlist'.  
+    
+    The fourth optional list is the same as the output of 'infoof'. 
+     
+SEE ALSO: 
+    linearp, eta, gaussmanin, okbase, infoof.     
+EXAMPLE: 
+    example gaussmaninmatrix; shows an example
+" 
+{
+
+//First we obtain the information of f
+list lula;
+if (size(#)==0)
+   {lula=infoof(f);}
+else
+  {lula=#;}
+
+
+
+number delta=lula[9]; 
+matrix eti=lula[10];
+
+poly g=lula[1];
+int d=deg(g); 
+ideal I=lula[2]; 
+ideal gI=lula[6];
+int mu=lula[8];
+ideal V=lula[7];
+matrix etaaa=eta()/d;
+
+int i,j; 
+matrix zerom[mu][mu];
+list lmatr=1/delta;
+list lkomaki;
+int np=size(paramlist);
+
+ 
+     for (i=1;i<=np;i=i+1)
+         {
+         lmatr=insert(lmatr,zerom, size(lmatr));
+         }
+
+ if (which==1)
+ {
+  for (i=1;i<=mu;i=i+1)
+   { 
+      lkomaki=gaussmanin(f, paramlist, V[i]*etaaa,lula);
+      for (j=1;j<=np;j=j+1)
+          {
+          zerom=lmatr[j+1];
+          zerom[i,1..mu]=lkomaki[j+1]; 
+          lmatr[j+1]=zerom;         
+          }
+       
+   }
+ }
+ 
+
+if (which==2)
+ {
+  for (i=1;i<=mu;i=i+1)
+   { 
+      lkomaki=gaussmanin(f, paramlist, V[i],lula);
+      for (j=1;j<=np;j=j+1)
+          {
+          zerom=lmatr[j+1];
+          zerom[i,1..mu]=lkomaki[j+1]; 
+          lmatr[j+1]=zerom;         
+          }
+       
+   }
+ }
+
+
+
+
+
+
+return(lmatr);
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,s,t(0..3)), (x,y),wp(2,3);
+    poly f=y^2-4*t(0)*(x-t(1))^3+t(2)*(x-t(1))+t(3); 
+     //below the Gauss-Manin connection with respect to dx/y, xdx/y
+    list l=t(0),t(1),t(2),t(3);
+    list li=gaussmaninmatrix(f,l,2);
+    li[1]/(27*t(0)^2);
+    matrix S[2][2]=0,-2,-2,0;   
+    for ( int i=2; i<=5;i=i+1){27*t(0)^2*(S*li[i]*inverse(S));}
+    // with respect to (-2/5)eta(), (-2/7)x.et()
+    li=gaussmaninmatrix(f,l,1);
+    li[1]/(27*t(0)^2);
+    S=0,-12/5,-12/7,0;
+    for (i=2; i<=5;i=i+1){27*t(0)^2* (S*li[i]*inverse(S));}
+}
+//-------------------------------------------------------------------------
+proc PFeq (poly f, P, number param, list #)
+"USAGE:
+    PFeq (poly_expression, poly_expression, par_expression);
+    PFeq (poly_expression, matrix_expression, par_expression);
+    PFeq (poly_expression, poly_expression, par_expression, list_expression);
+    PFeq (poly_expression, matrix_expression, par_expression, list_expression);
+    
+    
+RETURN: 
+    '1*(mu+1)' matrix 'A', where 'mu' is the Milnor number of 'f'. 
+    It calculate the Picard-Fuchs equation of the (n+1)-form (resp. n-form as
+    a 1*mu matrix) 'P' in the Brieskorn module H'' (resp. H') with respect to 
+    the fibration 'f=0' and the parameter 'param'.   
+    The obtained Picard-Fuchs equation is 
+                A[1,1]+A[1,2]d/dt+...A[1,mu+1]d^mu/dt^mu=0   
+    The fourth optional list is the same as the output of 'infoof'.
+NOTE:
+    This procedure usese gaussmaninmatrix to calculate the Fuchsian system 
+    and then uses sysdif to obtain the Picard-Fuchs equation. 
+SEE ALSO: 
+    cleardenommat, gaussmaninmatrix, sysdif, submat, infoof
+EXAMPLE: 
+    example PFeq; shows an example
+"
+{
+list listpar=param;
+
+list infi;
+  if (size(#)==0){infi=infoof(f); }
+  else {infi=#;}
+
+if (typeof(P)=="matrix")
+   {
+   list GMlist=gaussmaninmatrix(f,listpar,1,infi);
+   matrix BP=linearp(f,P,infi)[1];
+   }
+else
+    { 
+    list GMlist=gaussmaninmatrix(f,listpar,2,infi); 
+    matrix BP=linear(f,P,infi)[1]; 
+    }
+matrix GM= GMlist[1]*GMlist[2]; //The gaussmanin connection with respect
+                                //to the parameter param.
+
+matrix final=sysdif(GM,BP,param);
+
+return(final);
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),wp(2,3); 
+    //The differential form dx/y in the Brieskon module H'' is -2dxdy 
+    poly L=y^2-x*(x-1)*(x-t); //Legendre equation.
+    PFeq(L,-2,t);
+    poly W=y^2-x^3+3*t*x-2*t; //Weierstrass family.
+    PFeq(W,-2,t);
+    poly E=y^2-x^3+2*x^2-(1-t)*x; //A family of elliptic curves with a
+    PFeq(E,-2,t);                  //distinguished 2-torsion point. 
+    //An example in the Brieskorn module H'
+    PFeq(E, eta(), t);             
+ 
+}
+//-------------------------------------------------------------------------
+proc dbeta (poly f, int which, list #)
+"USAGE:
+    dbeta(poly_expression, int_expression)
+    dbeta(poly_expression, int_expression, list_expression)
+RETURN: 
+    '1*mu' integer matrix and a '1*mu' matrix of elements of the base ring.
+    If the second entry is 1 then the first entry of the output is a '1*mu' matrix 
+    with entries equal to deg(f)-1, where mu is the Milnor number of f. 
+    
+    If the second entry is 2,  this procedure uses an algorithm mentioned in  
+    [mo3] for computing dbeta's associated to the  f=0.
+    
+    In both cases, the second entry of the output is  a matrix coeff[1][mu] of 
+    numbers which we have divide on them.  For a value  t_0 such that 
+    coef[1,i](t_0)=0 for some i, the  obtained debta's do not work for the 
+    corresponding specialization of f=0. 
+    This procedure  uses muldF. 
+    If you know the standard basis of the jacobian of f give it as the third
+   entry.
+SEE ALSO:
+    muldF, submat.
+EXAMPLE: 
+    example dbeta; shows an example
+"
+{
+
+if (size(#)==0){ideal gI=std(jacob(f));}else{ideal gI=#[1];}
+
+int d=deg(f);
+matrix A=muldF(f, gI);
+int mu=ncols(A);
+int n=nvars(basering)-1; 
+int i,j, i1; poly Aij;
+
+ 
+ matrix coeff[1][mu];
+            //These is used for working with those numbers which
+             //we divide on them. 
+ int critvalue;        //When f=0 is singular.
+
+//---This part calculate dbeta in Abet.---- 
+intmat  Abet[1][mu]; 
+if (which==2)
+   {
+     for (i=mu; 1<=i; i=i-1)
+      {
+      j=1;
+      while (A[i,j]==0 and j<=mu-1) { j=j+1;}
+      if (j<=mu-1 or (j==mu and A[i,j]<>0))  
+       {
+         Abet[1,j]=deg(A[i,j]) div deg(var(1)); Aij=subst(A[i,j],var(1),1);
+         coeff[1,i]=Aij;       
+                         
+         for (i1=i-1 ;1<=i1; i1=i1-1) 
+            {
+              A[i1,1..mu]=submat(A, i1,1..mu)- 
+              (A[i1, j]*submat(A,i,1..mu))/A[i,j];
+            }
+       }
+       else { f, "=0, is singular"; critvalue=1;}
+      }
+    }
+if (which==1)  
+    {
+       for (i=1;i<=mu;i=i+1){Abet[1,i]=d-1;} 
+     
+        for (i=mu; 1<=i; i=i-1)
+            {
+            coeff[1,i]=subst(A[i,i], var(1),1);
+            for (i1=i-1 ;1<=i1; i1=i1-1) 
+                {
+                 A[i1,1..mu]=submat(A, i1,1..mu)- 
+                (A[i1, i]*submat(A,i,1..mu))/A[i,i];
+                 }
+           }
+       
+    }
+
+
+int s=0; for (i=1;i<=mu;i=i+1){s=s+Abet[1,i];}
+if (s==mu*(d-1))
+    {return(list(Abet,coeff));}
+else
+    {"// ** The algorithm for computing dbeta's is not is correct. Report 
+              your example to H. Movasati **";}
+
+
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t), (x,y),dp;
+    poly f=2*(x3+y3)-3*(x2+y2)-t;
+    dbeta(f,1);
+    dbeta(f,2);
+}
+//--------------------------------added 29/7/2005------------------------
+proc sysdif (matrix GM, matrix BP, number pa, list #)
+"USAGE:
+    sysdif (matrix_expression, matrix_expression, parameter_expression);
+    sysdif (matrix_expression, matrix_expression, parameter_expression,
+    number_expression);
+RETURN: 
+    In the first case it returns a '1*(mu+1)' matrix 'A'. 
+    Here 'GM' is a mu*mu matrix of the  system and 'BP' is a 1*mu 
+    matrix, both with entries in the coefficient field of the base ring. This 
+    proceedure calculates the linear differential equation of  ' BP*Y ', where 
+    'Y'( a 'mu*1' matrix) is a solution of the system Y'=GP*Y and the 
+    derivation is taken with respect to the parameter 'pa'. The  obtained 
+    linear differential equation is 
+                A[1,1]+A[1,2]d/dt+...A[1,mu+1]d^mu/dt^mu=0, pa=t   
+    In the second case it returns a list of A and a (nuit-1)*mu matrix B, where
+    nuit-1 is order  of the above linear differential equation and  ' BY ' 
+    satisfies a system of the following type: It is of dimension 'nuit-1'
+    and the last row of the system is 
+         [-A[1,1]/A[1,nuit],-A[1,2]/A[1,nuit],...,-A[1,nuit-1]/A[1,nuit]]
+    and the  i*(i+1) entries are 1. All other entries are zero.   
+  
+NOTE:
+    The command submat from the library matrix.lib, and 'cleardenommat'
+     is used in this procedure. At the end it checks if the result is true or not.
+SEE ALSO: 
+    submat, cleardenommat, diffpar 
+EXAMPLE: 
+    example sysdif; shows an example
+"
+{
+int mu=ncols(GM);
+
+
+int nuit=0;              //It counts the number of iterations of the 
+                         // system
+int  i,j, beta; beta=1;
+matrix pf[mu+1][mu+1];   //This matrix keeps the coefficients of GM(BP*Y)'s
+     
+for (i=1;i<=mu+1; i=i+1){pf[i,i]=1;} //
+
+matrix B[mu+1][mu];      //In this matrix we keep GP^k(BP*Y)'s without 
+                         //modification. We need it at the end to check our
+                         //result. 
+matrix A[mu+1][mu];      //The main operation is done on this matrix.
+                         //GP^k(BP*Y) are stored in A 
+poly ge;
+intmat sotun[1][mu];     //The sotun[1,i] is the first A[1,i] which is not 
+                         //zero, every time that we modify A. 
+
+while (nuit==0)
+  {
+     
+    //The iteration of BP*Y beta-1 times under the Gauss-Manin connection.
+    //Note that BP is already iterated beta-2 times.
+    if (beta>1){BP=diffpar(BP,pa)+BP*GM};
+     
+    A[beta,1..mu]=BP;
+    B[beta,1..mu]=BP;
+    
+    for (j=1;j<=beta-1;j=j+1)
+      {
+        ge=-A[beta,sotun[1,j]]/A[j,sotun[1,j]]; 
+        A[beta,1..mu]=
+        submat(A, beta,1..mu)+ge*submat(A,j,1..mu);
+        pf[beta,1..mu+1]=submat(pf, beta,1..mu+1)+ 
+        ge*submat(pf, j,1..mu+1);   
+      }
+    i=1;
+     while (A[beta,i]==0 and i<mu ) {i=i+1;}
+     if (i==mu and A[beta,mu]==0) {nuit=beta;} 
+     else {sotun[1,beta]=i; beta=beta+1;}
+      
+  }
+matrix final=cleardenommat(submat(pf, nuit,1..mu+1))[2];
+//-------Check---------
+ matrix check[1][mu]; poly check1;
+ for (i=1;i<=nuit;i=i+1) {check=check+submat(B,i,1..mu)*final[1,i];}
+ for (i=1;i<=mu;i=i+1) {check1=check1+check[1,i];}
+//-----------deleting zeros---------------- 
+ matrix transform=submat(B,1..nuit-1,1..mu);
+//final=submat(final,1,1..nuit);
+//-------------------------------------------
+ if (size(#)>0) { list ret=final,transform; } else {matrix ret=final;}
+ if (check1==0) {return(ret);}
+ else
+ {"// ** The procedure sysdif has failed for your example. 
+      Please report this to Hossein  Movasati **";}
+
+ 
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,z,a,b,c),x,dp;
+    matrix A0[2][2]=0,-b,0,1-c; matrix A1[2][2]=0,0,a,c-a-b-1;
+    matrix A[2][2]=(1/z)*A0+(1/(z-1))*A1;
+    print(A);
+    matrix B[1][2]=1,0;
+    sysdif(A,B,z);
+}
+
+//---------------------------------------------------------------------------------------------------------------
+proc LinearRelations (poly f)
+"
+USAGE:
+    LinearRelations(poly_expression)
+RETURN:
+    A list. This procedure takes a tame polynomial f with zero discriminant. It returns 
+    a list of polynomials P such that Pdx is zero in the Gauss-Manin system. P is a linear 
+    combination of a set of monomials obtained by okbase(std(jacob(g))), wehre g is the 
+    last homogenous piece of f. 
+SEE ALSO:
+    difofn, substpar, infoof, mulmat, gaussred_pivot  
+EXAMPLE: 
+    example LinearRelations; shows an example
+" 
+{ 
+matrix MM=mulmat(f,f);
+list ll=gaussred_pivot(MM); 
+int ran=ll[4];
+int mu=ncols(MM);
+matrix lrc[mu-ran][mu];
+int i,j;
+ for (i=1;i<=mu-ran;i=i+1){lrc[i, i+ran]=1;}
+matrix A=lrc*inverse(ll[2])*ll[1];
+
+
+ideal II=jacob(f);
+ideal V=okbase(std(II));
+matrix mon[mu][1]=V;
+matrix alph=A*mon;
+
+
+list divl;
+list resu;
+int nv=nvars(basering);
+poly ohh;
+for (i=1;i<=mu-ran;i=i+1)
+    {
+     divl=division(f*alph[i,1],II); 
+     for (j=1;j<=nv;j=j+1){divl[1][j,1]=(-1)^(j-1)*divl[1][j,1];}
+     ohh=alph[i,1]-difofn(transpose(divl[1]));
+     resu=insert(resu, ohh, size(resu));
+    }
+
+return(resu);
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,a,b,d),(x,y,w),wp(8,9,6); 
+    poly f=y^2*w-4*x^3+3*a*x*w^2+b*w^3-(1/2)*(d*w^2+w^4);
+    LinearRelations(f); 
+}
+
+//-----------------------The procedures added after studying the Hodge cycles of Fermat varieties and IVHS---------
+//------------------------------------------------------------------------------------------------------------------
+proc lcm (intvec mlist)       
+"USAGE:
+       lcm(integer vector_expression) 
+RETURN:
+    An integer which is the lowest common multiple of the entries of mlist.  
+SEE ALSO:
+    gcm
+EXAMPLE:
+    example lcm; shows an example
+"
+{
+int i,j; 
+int res;
+res=mlist[1];
+for (i=2; i<=size(mlist); i=i+1){ j=gcd(res, mlist[i]); res=res*mlist[i] div j;}   
+return(res); 
+} 
+example
+{"EXAMPLE:"; echo=2;
+  intvec dl=3,5,6;
+  lcm(dl);
+}
+//-----------------------------------------------------------------------------------
+proc MixedHodgeFermat(intvec  mlist)       
+"USAGE:
+       MixedHodgeFermat(integer vector_expression) 
+RETURN:
+    A list of four lists. The first two lists  are the pieces of the mixed Hodge 
+    structure of the de Rham cohomology of the affine Fermat variety 
+            var(1)^mlist[1]+\cdots+\var(n+1)^mlist[n+1]=1
+    where 'n+1' is the size of 'mlist'.  The third list is just obtained by 
+                       okbase(std(jacob(f)))
+    where 'f' is the polynomial above. The fourth list is the list of monomials in 
+    the third list with 
+                        sum 1/m_i <A_beta< sum 1/m_i
+    where the sum runs throught the entries of 'mlist' and 'd', the lowest common multiple of
+    'mlist[i]'.
+    The first 'n+1' variable of the base ring are  reserved for the equation of the Fermat 
+    variety. Their weights must be 'd/mlist[i]'.  
+SEE ALSO:
+    okbase, lcm
+EXAMPLE:
+    example MixedHodgeFermat; shows an example
+"
+{
+int i;  int n=size(mlist)-1;  int d=lcm(mlist);
+poly f; for (i=1; i<=n+1; i=i+1){f=f+var(i)^mlist[i];}
+ideal I=kbase(std(jacob(f)));
+int mu=1;  poly XX=1;  
+for (i=1; i<=n+1; i=i+1){mu=mu*(mlist[i]-1); XX=XX*var(i);}
+//---------We order I according to its mixed Hodge structure---------------
+ list l1; list l2; int k_1; int k; list l3;
+ for (i=1; i<=n; i=i+1){ l1=insert(l1,list());  l2=insert(l2,list()); }   l1=insert(l1,list()); 
+ for (i=1; i<=size(I); i=i+1){ 
+                         k_1=deg(I[i]*XX);
+                         k=k_1 div d; 
+                         if (k*d<>k_1) { l1[k+1]=insert(l1[k+1],I[i], size(l1[k+1]));  } else { l2[k]=insert(l2[k],I[i],size(l2[k])); }
+                         if ( deg(I[i])<=d and deg(I[i])>=2 ) {l3=insert(l3,I[i],size(l3));}
+                        }
+                        
+ return(list(l1,l2, list(I[1..size(I)]), l3));
+}
+example
+{"EXAMPLE:"; echo=2; 
+    ring r=0, (x,y,z),wp(10,5,4);
+    list li=MixedHodgeFermat(intvec(2,4,5));
+    list h20=li[1][1]; list h11=li[1][2]; list h02=li[1][3];
+    h20[1..size(h20)]; h11[1..size(h11)]; h02[1..size(h02)];
+    li[2]; li[3]; li[4];
+}
+//--------------------------------------------------------------------------------------
+proc HodgeNumber(intvec  mlist)       
+"USAGE:
+       HodgeNumber(integer vector_expression) 
+RETURN:
+    A list of two lists of integers. The first list is the list of the Hodge numbers
+    of the compactified Fermat variety
+            var(1)^mlist[1]+\cdots+\var(n+1)^mlist[n+1]=1
+    where 'n+1' is the size of 'mlist'.  The second is the list of the Hodge numbers of
+    the Fermat variety at infinity.   
+SEE ALSO:
+    MixedHodgeFermat
+EXAMPLE:
+    example HodgeNumber; shows an example
+"
+{
+int n=size(mlist)-1; int d=lcm(mlist);
+list wlist;   //--weight of the variables
+for (int i=1; i<=size(mlist); i=i+1)
+      { wlist=insert(wlist, (d div mlist[i]), size(wlist));} 
+ring rlocal=0, (x(1..n+1)),wp(wlist[1..n+1]);
+list ll=MixedHodgeFermat(mlist);
+list hn=list(),list(); 
+for (i=1; i<=size(ll[1]); i=i+1){ hn[1]=insert(hn[1], size(ll[1][i]), size(hn[1])); }
+for (i=1; i<=size(ll[2]); i=i+1){ hn[2]=insert(hn[2], size(ll[2][i]), size(hn[2])); }
+return(hn);
+}
+example
+{"EXAMPLE:"; echo=2;
+    HodgeNumber(intvec(2,4,5));
+}
+//----------------------------------------------------------------------------------------
+proc PeriodMatrix (list J, list I, number ru)       
+"USAGE:
+       PeriodMatrix(list_expression,list_expression, number_expression) 
+RETURN:
+    A matrix. It gives the period matrix of elements 'J' of the de Rham cohomology of
+    the generalized Fermat variety 
+              x_1^m_1+...x_{n+1}^{m_{n+1}}=1
+    over a basis of vanishing cycles 'I'.  For the formula of this see H. Movasati,
+    Topics In Hodge Theory: With Emphasis on Multiple Integrals. 
+    The number 'ru' is supposed to be the d-th  primitive root of unity which is the first
+    parameter of the ring, where 'd' is  the lowest common multiple of 'mlist'. 'I' and 'J'  
+    are  supposed to be lists of monomials. The first 'n+1' variable of the base ring are  
+    reserved for the equation of the Fermat variety. Their weights must be 'd/mlist[i]'. 
+SEE ALSO:
+    
+EXAMPLE:
+    example PeriodMatrix; shows an example    
+"
+{
+poly komak=1;
+matrix PM[size(I)][size(J)]; 
+number zk; int i; int j; int k; int n=nvars(basering)-1; int beta_1; int beta_2; 
+for (i=1; i<=size(I); i=i+1){
+         for (j=1; j<=size(J); j=j+1){
+                                   komak=1; for (k=1; k<=n+1; k=k+1)
+                                                 {
+                                                 beta_1=deg(coef(I[i],var(k))[1,1]) div deg(var(k)); 
+                                                 beta_2=deg(coef(J[j],var(k))[1,1]) div deg(var(k));
+                                                 zk=ru^deg(var(k)); 
+                                                 komak=komak*(zk^((beta_1+1)*(beta_2+1))- zk^(beta_1*(beta_2+1)));
+                                                 }  
+                                  PM[i,j]=komak;                
+                                 }
+                         }
+                         return(PM); 
+} 
+example
+{"EXAMPLE:"; echo=2;
+    ring r=(0,z), (x,y),dp;
+    minpoly=z^2+z+1; 
+    poly f=x3+y3;
+    ideal I=std(jacob(f)); I=kbase(I);
+    list Il=I[1..size(I)]; Il[1..size(Il)]; 
+    print(PeriodMatrix(Il,Il, z));
+}
+
+//---------------------------------------------------------------------------
+proc RemoveList (list l1, list l2)
+"USAGE:
+    okbase(list_expression, list_expression)
+RETURN:
+    It removes common elements of 'l2' and 'l1' from 'l1'
+    and returns the result list. 
+SEE ALSO: 
+   
+EXAMPLE: 
+    example RemoveList; shows an example
+"
+{
+int i; int j; 
+   for (i=1; i<=size(l2); i=i+1)
+       {
+          j=1;
+          while (j<=size(l1))
+          {
+          if (l1[j]==l2[i]){ l1=delete(l1, j);}
+             else   {j=j+1;}
+          }
+         
+       }
+return(l1);        
+}
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0, (x,y),dp;
+    list l1=x,y,x^2,6,23; list l2=6, y^3, x; 
+    RemoveList(l1,l2); 
+    RemoveList(l2,l2);
+}
+//--------------------------------------------------------------------------------
+proc DimHodgeCycles(intvec mlist, list #)       
+"USAGE:
+       DimHodgeCycles(integer vector_expression) 
+       DimeHodgeCycles(integer vector_expression, integer_expression) 
+       DimeHodgeCycles(integer vector_expression, list_expression)
+RETURN:
+    An integer which is the the dimension of the primitive part of the vector space of 
+    Hodge cycles of the generalized Fermat variety. The exponent of each variable is given 
+    in 'mlist'. The second entry is optional. 
+    If it 0 is then the procedure gives an integer valued  matrix such that a perpendicular 
+    vector to its columns correpond  to a Hodge cycle. A base ring must be active.
+    If it is a list of exponents of monomials (representing elemenents of the de Rham cohomology)
+    then the space of cycles with zero periods of such monomials is computed. The output is 
+    an integer valued  matrix such that a perpendicular vector to its columns correpond  to such a 
+    cycle. 
+SEE ALSO: 
+    PeriodMatrix, rank.     
+EXAMPLE: 
+    example DimHodgeCycles; shows an example
+"
+{
+  int n=size(mlist)-1; int d=lcm(mlist);
+  list wlist;         //--weight of the variables
+  for (int i=1; i<=size(mlist); i=i+1)
+      { wlist=insert(wlist, (d div mlist[i]), size(wlist));} 
+  def prevring=basering;
+  ring rlocal=(0,z), (x(1..n+1)),wp(wlist[1..n+1]); 
+  poly cp=cyclotomic(d);   int degext=deg(cp) div deg(var(1));
+  cp=subst(cp, x(1),z);    
+  minpoly =number(cp); //--z is the d-th root of unity---
+
+  list ll=MixedHodgeFermat(mlist); 
+  int mu_1;
+  for (i=1; i<=n+1; i=i+1) 
+      {mu_1=mu_1+size(ll[1][i]);} //---the dimension of the primitive cohomology of the compactified variety--
+      
+    list J; int hFn;    
+    if ( size(#)>0) 
+      {
+         if ( typeof(#[1])=="int" and #[1]==0)
+          {
+          J=ll[1][1];  hFn=size(ll[1][1]); 
+          for (i=2; i<=(n div 2); i=i+1){hFn=hFn+size(ll[1][i]); J=J+ll[1][i];}  
+          }
+          else
+          {
+          hFn=size(#); 
+          for (i=1; i<=hFn; i=i+1) { J=J+list(monomial(#[i]));}  
+          }
+       }
+    else
+       {
+       J=ll[1][1];  hFn=size(ll[1][1]); 
+       for (i=2; i<=(n div 2); i=i+1){hFn=hFn+size(ll[1][i]); J=J+ll[1][i];}  
+       }
+  list I=ll[3];
+  int mu=size(I); 
+
+  if (hFn<>0)
+  {
+  matrix PM[mu][hFn]=PeriodMatrix(J,I, par(1));
+  matrix perp[mu][degext*hFn];
+  matrix komak[mu][hFn]; 
+  for (i=1; i<=degext; i=i+1)
+                           { 
+                           komak=subst(PM,par(1),0); 
+                           perp[1..mu, ((i-1)*hFn+1)..(i*hFn)]=komak;
+                           PM=(PM-komak)/par(1);
+                           }                          
+  
+  
+
+  if (size(#)==0)
+     {return(mu_1- rank(perp));}
+  else   
+     {
+         setring prevring;
+         matrix perp=imap(rlocal, perp);
+         return(perp);
+     }     
+  }
+  else
+  {
+  int DHC=mu_1;
+    if (size(#)<>0)
+       {"All the homology classes are Hodge/have zero periods with respect to your list"; }
+    else{return(DHC);}
+  }
+}
+example
+{"EXAMPLE:"; echo=2;
+   ring r=0,x,dp;
+   DimHodgeCycles(intvec(6,6,6)); 
+   print(DimHodgeCycles(intvec(2,4,5),0));
+   
+}
+//-----------------------------------------------------------------------------------------------------
+proc BasisHodgeCycles (intvec mlist, list #)       
+"USAGE:
+       BasisHodgeCycles(integer vector_expression) 
+RETURN:
+    A matrix. The rows of this matrix form a basis of the 
+    space of affine Hodge cycles of the generalized  Fermat variety 
+              var(1)^mlist[1]+...+var(n+1)^{mlist[n+1]}=1
+     over rational numbers and written in the basis of vanishing  cycles. It 
+     includes the cycles at inifinity. The second input is optional, if it is  
+     the d-th root of unity then the output is a list of two matrices. The first 
+     matrix is as before. The rows of the second matrix are the periods of the 
+     Hodge cycles written  in  a root of unity which is given in #[1]. In this case, 
+     the first 'n+1' variable of the base ring are  reserved for the equation of the 
+     Fermat variety. Their weights must be 'd/mlist[i]'.
+     If the optional input is a list of  the d-th root of unity and a list of integer
+     vectors then the output is similar to the previous one. Here, the list of integer
+     vectors is the same as the optional input of 'DimHodgeCycles'. 
+SEE ALSO:
+    gaussred_pivot, DimHodgeCycles
+EXAMPLE:
+    example BasisHodgeCycles; shows an example    
+"
+{
+   list lula=#;
+   if (size(lula)>1)
+      {
+       matrix perp=DimHodgeCycles(mlist,lula[2]);
+      }
+   else
+      {
+      matrix perp=DimHodgeCycles(mlist,0);
+      }
+list perplist=gaussred_pivot(perp); 
+int mu=nrows(perp); 
+int dahc=mu-perplist[4];
+matrix Y[dahc][mu];
+for (int i=1; i<=dahc; i=i+1) { Y[i, perplist[4]+i]=1;}
+matrix X=Y*inverse(perplist[2])*perplist[1];
+
+if (size(lula)>=1)
+  {
+  int n=size(mlist)-1;
+  list ll=MixedHodgeFermat(mlist);
+  list  I=ll[3];
+  list  Imiddle=ll[1][(n div 2)+1]; 
+  matrix PM=PeriodMatrix(Imiddle, I, #[1]);
+  matrix PHC=X*PM;
+  return(list(X, PHC)); 
+  }
+if (size(lula)==0) {return(X);}
+
+
+
+
+} 
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0,x,dp;
+    print(BasisHodgeCycles(intvec(2,4,5))); 
+    
+    ring rr=(0,z),x(1..3),wp(10,5,4);             
+    minpoly =z8-z6+z4-z2+1; //20-th root of unity
+    list A=BasisHodgeCycles(intvec(2,4,5),z);
+    print(A[2], "%s");
+}
+//----------------------------------------------------------------------------------------------------------------
+proc IntersectionMatrix (list I)       
+"USAGE:
+       IntersectionMatrix(list_expression) 
+RETURN:
+    The intersection matrix in the basis of vanishing cycles 'I' of the generalized 
+    Fermat variety 
+              x_1^m_1+...x_{n+1}^{m_{n+1}}=1.
+SEE ALSO:
+    
+EXAMPLE:
+    example IntersectionMatrix; shows an example 
+              
+"
+{
+int i; int j; int k; int n=nvars(basering)-1;
+poly XX=1;  for (i=1; i<=n+1; i=i+1){XX=XX*var(i);}
+matrix Psi[size(I)][size(I)]; poly komak;
+for (i=1; i<=size(I); i=i+1){
+         for (j=1; j<=size(I); j=j+1)
+                                 {
+                                     komak=I[j]/I[i];
+                                         if ( komak<>0 and  (I[i]*XX)/I[j]<>0 ) 
+                                            {
+                                            for (k=1; k<=n+1; k=k+1){ komak=subst(komak, var(k),-1);}
+                                            Psi[i,j]= (-1)^( (n*(n+1) div 2) )*komak;
+                                            }                                 
+                                 }
+                            }
+ 
+Psi=Psi+(-1)^n* transpose(Psi);  
+for (i=1; i<=size(I); i=i+1){Psi[i,i]=(-1)^( n*(n+1) div 2 )*( 1+(-1)^n);}   
+return(Psi); 
+} 
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0, (x,y,z),dp;
+    poly f=x3+y3+z3;
+    ideal I=std(jacob(f)); I=kbase(I);
+    list Il=I[1..size(I)]; Il[1..size(Il)];
+    print(IntersectionMatrix(Il));
+}
+//--------------------------------------------------------------------------
+proc Matrixpij(intvec mlist, matrix Pe)       
+"USAGE:
+       Matrixpij(integer vector_expression, matrix_expression) 
+RETURN:
+    A matrix. The matrix 'Pe' is supposed to be the periods  of a basis of the middle 
+    piece of the  Hodge decomposition of the Fermat variety 
+                F:  x_1^m_1+...x_{n+1}^{m_{n+1}}=1.
+    over a Hodge/algebraic cycle. It is a 1 times h matrix,  where h is the middle Hodge  
+    number of F. This procedure  computes the matrix 
+                               [p_{i+j}] 
+    The first 'n+1' variable of the base ring are  reserved for the equation of the Fermat 
+    variety. Their weights must be 'd/mlist[i]'.                      
+"
+{
+int n=size(mlist)-1; int nh2=(n div 2); int k; int i; int j; 
+list ll=MixedHodgeFermat(mlist);
+list A=ll[1][nh2]; list B=ll[1][nh2+1]; list R=ll[4]; int an=size(A); int rn=size(R); int bn=size(B); 
+matrix Pij[an][rn]; 
+for (i=1; i<=an; i=i+1)
+    {
+    for (j=1; j<=rn; j=j+1)
+        {
+           for (k=1; k<=bn; k=k+1)
+           {
+            if (A[i]*R[j]==B[k] ){ Pij[i,j]=Pe[1,k];}
+           }
+        }
+    }
+return(Pij);
+}
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0,(x,y,z), wp(20,15,12);
+    matrix P[1][20]; P[1,1..20]=1..20;
+    print(Matrixpij(intvec(3,4,5),P));
+    MixedHodgeFermat(intvec(3,4,5));
+    
+}
+//---------------------------------------------------------------------------------------------
+proc TranCoho (intvec mlist, list #)       
+"USAGE:
+       TranCoho(integer vector_expression)
+       TranCoho(integer vector_expression, any_expression)
+RETURN:
+    A list. This is the list of exponents of the ingredient monomials of the transcendental 
+    piece of the (n/2,n/2) de Rham cohomology of the  Fermat variety 
+              x_1^m_1+...x_{n+1}^{m_{n+1}}=1,
+    where  'mlist' contains 'm_1,m_2,...'. The periods of these differential forms 
+    over  a cycle times '(2 pi i)^(-n/2)' are  conjectured to be transcendental numbers.
+    In the case of Hodge cycles these periods are zero.  Other differential forms in 
+    the (n/2,n/2) cohomology have algebraic periods. A ring must be active. If you want  
+    the list of corresponding monomials then write anything in the second entry which is optional. 
+    In this case the base ring must contain 'n+1' variables corresponding to 'x_1,x_2,...,x_{n+1}'. 
+SEE ALSO:
+    MixedHodgeFermat, leadexp.
+EXAMPLE:
+    example TranCoho; shows an example 
+              
+"
+{
+  int n=size(mlist)-1; int nh=n div 2; 
+  int d=lcm(mlist);
+  def prevring=basering;
+  list wlist;  //--weight of the variables
+  for (int i=1; i<=size(mlist); i=i+1)
+       { wlist=insert(wlist, (d div mlist[i]), size(wlist));}
+  ring rlocal=0, (x(1..n+1)),wp(wlist[1..n+1]); 
+  list ll=MixedHodgeFermat(mlist)[1]; 
+  int j;  int k; int s;
+  int tekrar; int uch; 
+  intvec beta; intvec betanew;  number komak; list final; 
+  for (i=1; i<=nh; i=i+1)
+      {
+       for (j=1; j<=size(ll[i]); j=j+1)
+         {
+           beta=leadexp(ll[i][j]);
+            for (k=2; k<=d-1; k=k+1) 
+              {
+              if (gcd(k,d)==1)
+                 {
+                      komak=0; 
+                      betanew=0; 
+                      for (s=1; s<=n+1; s=s+1)
+                        {
+                        komak=komak+  (k*(beta[s]+1) mod mlist[s])/number(mlist[s]);
+                        betanew=betanew, (k*(beta[s]+1) mod mlist[s])-1; 
+                        }
+                  if (nh<komak and komak<nh+1)
+                     {
+                     betanew=betanew[2..n+2];
+                                tekrar=0;
+                                for (uch=1; uch<=size(final); uch=uch+1)
+                                    {
+                                    if (betanew==final[uch]){tekrar=1;}
+                                    }
+                                if (tekrar==0)
+                                   {final=insert(final, betanew, size(final));} 
+                                    
+                     }
+                  }
+              }
+         }
+      }
+if (size(#)==0)
+       {return(final);}
+else
+       {
+       setring prevring; 
+       for (i=1; i<=size(final); i=i+1)
+           {
+           final[i]=monomial(final[i]);
+           }
+       return(final);
+       }
+} 
+example
+{"EXAMPLE:"; echo=2;
+    ring r1=0,x,dp; 
+    intvec V=5,5,5; 
+    list li1=TranCoho(V); li1[1..size(li1)];
+    ring r2=0,(x,y,z),dp; 
+    list li2=TranCoho(V,0); li2[1..size(li2)]; 
+}
+//--------------------------------------------------------------------------
+proc LinearCoho (intvec mlist, list #)       
+"USAGE:
+       LinearCoho(integer vector_expression)
+       LinearCoho(integer vector_expression, any_expression)
+RETURN:
+    A list. This is the list of exponents of the ingredient monomials of th piece of  (n/2,n/2) 
+    de Rham cohomology of the  Fermat variety 
+              x_1^m_1+...x_{n+1}^{m_{n+1}}=1,
+    representing linear cycles of dimension 'n/2', where  'mlist' contains 'm_1,m_2,...'. 
+    A ring must be active. The second entry is optional. If it is given (anything) then the output is 
+    a list of two lists. The first list is the list of corresponding monomials. The  second list is a list 
+    of lists, each one  containing   n/2+1 rational numbers attached to the monomials of the first list. 
+    The first rational number is always 'n/2+1-A_beta'.
+    In both cases the base ring must contain 'n+1' variables corresponding to 'x_1,x_2,...,x_{n+1}'. 
+SEE ALSO:
+    MixedHodgeFermat, leadexp.
+EXAMPLE:
+    example LinearCoho; shows an example 
+              
+"
+{
+  int n=size(mlist)-1; int nh=n div 2; 
+  int d=lcm(mlist);
+  def prevring=basering; 
+  list wlist;  //--weight of the variables
+  for (int i=1; i<=size(mlist); i=i+1)
+       { wlist=insert(wlist, (d div mlist[i]), size(wlist));}
+  ring rlocal=0, (x(1..n+1)),wp(wlist[1..n+1]);  
+  list ll=MixedHodgeFermat(mlist)[1][nh+1];
+  list final; int j; int s;  intvec beta; 
+  number Abet; list libeta; int check; int sl; list lz; list lko;
+  
+
+       for (i=1; i<=size(ll); i=i+1)
+         {
+          beta=leadexp(ll[i]); Abet=0; check=0; lko=list();
+          for (s=1; s<=n+1; s=s+1)
+                        {Abet=Abet+  (beta[s]+1)/number(mlist[s]);}  
+          libeta=nh+1-Abet,beta[1..n+1];
+          for (s=2; s<=n+2; s=s+1){ libeta[s]=(libeta[s]+1)/number(mlist[s-1]);}           
+          while (size(libeta)<>0 and check<>1)
+                {
+                sl=size(libeta); 
+                for (s=2; s<=sl; s=s+1)
+                        {
+                        if ( libeta[1]+libeta[s]==1 )
+                           {  
+                              lko=insert(lko,libeta[1],size(lko)); 
+                              libeta=delete(libeta, s); 
+                              libeta=delete(libeta, 1); s=sl+1975;
+                           } 
+                        }
+                if (size(libeta)==sl) {check=1; }        
+                }
+                
+         if (size(libeta)==0){
+                             final=insert(final, beta, size(final));
+                             lz=insert(lz,lko,size(lz));
+                             } 
+         }
+      
+if (size(#)==0)
+       {return(final);}
+else
+       {
+       setring prevring; 
+       for (i=1; i<=size(final); i=i+1)
+           {
+           final[i]=monomial(final[i]);
+           }
+       list lz=imap(rlocal, lz);
+       return(list(final,lz));
+       }
+} 
+example
+{"EXAMPLE:"; echo=2;
+    ring r1=0,x,dp; 
+    intvec V=2,4,5; 
+    list li1=LinearCoho(V); li1[1..size(li1)];
+    ring r2=0,(x,y,z),dp; 
+    list li2=LinearCoho(V,0);  li2[1]; li2[2]; 
+}
+//-------------------------------------------------------------------------
+proc PeriodLinearCycle(intvec mlist, intvec al, intvec pl, number ze)       
+"USAGE:
+       PeriodLinearCycle(integer vector_expression, integer vector_expression, integer vector_expression, number_expression) 
+RETURN:
+    A matrix 'Pe'. It  is supposed to be the periods  of a basis of the middle piece of 
+    the  Hodge decomposition of the Fermat variety 
+                X:  x_1^m_1+...x_{n+1}^{m_{n+1}}=1.
+    over the linear cycle identified with 'al' and 'pl'. It is a 1 times h matrix,  where 
+    h is the middle Hodge   number of X. The first 'n+1' variable of the base ring are  
+    reserved for the equation of the Fermat variety. Their weights must be 'd/mlist[i]', where 
+    'd' is the least common multiple of 'm_i's. The number 'ze' is supposed to be the '2d'-th
+    primitive root of unity.  
+"
+{
+int n=size(mlist)-1; int d=lcm(mlist); int nh2=n div 2; 
+list ll=MixedHodgeFermat(mlist)[1][nh2+1]; int mhn=size(ll);
+matrix Pe[1][mhn]; 
+int beta_0; poly XX=1; for (int i=1; i<=n+1; i=i+1){XX=XX*var(i);}
+intvec expmon;  int j; int check; 
+for (i=1; i<=mhn; i=i+1)
+    {
+    beta_0=  (nh2+1)*d-deg(ll[i]*XX)-1;
+    expmon=leadexp(ll[i]); expmon=beta_0, expmon;
+    check=0;
+    for (j=0; j<=n; j=j+2)
+         { 
+         if (expmon[pl[j+1]+1]+expmon[pl[j+2]+1]<>d-2){check=1;} 
+         }
+    if (check==1) { Pe[1,i]=0;}
+       else
+       {
+       Pe[1,i]=1;
+       for (j=0; j<=n; j=j+2)
+           {
+           Pe[1,i]=Pe[1,i]*ze^(  (2*al[j+2]-2*al[j+1]+1 )*(expmon[pl[j+1]+1]+1) );
+           }
+       }
+    
+    }
+Pe=Pe*SignPerm(pl);     
+return(Pe);
+}
+example
+{"EXAMPLE:"; echo=2;
+int d=5; intvec aa=0,0,0,0,0,0;  intvec pp=0,1,2,3,4,5;
+intvec mlist=d,d,d,d,d; int n=size(mlist)-1;
+ring r=(0,z), (x(1..n+1)),dp;
+poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+cp=subst(cp, x(1),z); minpoly =number(cp); 
+matrix Per=PeriodLinearCycle(mlist, aa, pp,z); 
+matrix A=Matrixpij(mlist, Per);
+rank(A), binomial(n div 2+d,d)-(n div 2+1)^2; 
+}
+//---------------------------------------------------------------------------------------------
+proc CodComInt(int n, int d, intvec  dl)       
+"USAGE:
+       CodComInt(integer_expression, integer_expression, integer vector_expression) 
+RETURN:
+    A positive integer. It is the codimension of the loci of hypersurfaces of dimension 'n'
+    and degree 'd'containing a complete intersection of type 'dl'. 
+
+SEE ALSO:
+    okbase, lcm
+EXAMPLE:
+    example CodComInt; shows an example
+"
+{ 
+int sn=size(dl); int i; int j; 
+for (i=1; i<=sn; i=i+1){dl=dl, d-dl[i];} 
+ring rlocal=0, x(1..2*sn), dp; poly f; for (i=1; i<=2*sn; i=i+1){f=f+var(i)^3;}
+ideal I=kbase(std(jacob(f)));  
+poly komak; int sumdi; poly signint; bigint finalint; 
+for (j=1; j<=size(I); j=j+1)
+    {
+    komak=I[j]; signint=I[j];
+     for (i=1; i<=2*sn; i=i+1)
+          {
+          komak=subst(komak,var(i), var(1)^(dl[i]));
+          signint=subst(signint,var(i), -1);
+          sumdi=deg(komak);
+          }     
+    if (sumdi<=d){finalint=finalint+int(signint)*binomial(n+1+d-sumdi,n+1);} 
+      
+    }
+return(finalint);
+}
+example
+{"EXAMPLE:"; echo=2;
+    CodComInt(4,6,intvec(3,3,3));
+}
+//----------------------------------------------------------------------------
+proc Codim(int n, int d, intvec  dl)       
+"USAGE:
+       Codim(integer_expression, integer_expression, integer vector_expression) 
+RETURN:
+    A positive integer. It is a sum of certain binomials related to the codimension of 
+    the loci of hypersurfaces of dimension 'n' and degree 'd'containing a certain algebraic 
+    cycle. This is a modification of the procedure 'CodComInt'.
+SEE ALSO:
+    okbase, lcm
+EXAMPLE:
+    example ; shows an example
+"
+{ 
+int sn=size(dl); int i; int j; 
+ring rlocal=0, x(1..sn), dp; poly f; for (i=1; i<=sn; i=i+1){f=f+var(i)^3;}
+ideal I=kbase(std(jacob(f)));  
+poly komak; int sumdi; poly signint; bigint finalint; 
+for (j=1; j<=size(I); j=j+1)
+    {
+    komak=I[j]; signint=I[j];
+     for (i=1; i<=sn; i=i+1)
+          {
+          komak=subst(komak,var(i), var(1)^(dl[i]));
+          signint=subst(signint,var(i), -1);
+          sumdi=deg(komak);
+          }     
+    if (sumdi<=d){finalint=finalint+int(signint)*binomial(n+1+d-sumdi,n+1);} 
+      
+    }
+return(finalint);
+}
+example
+{"EXAMPLE:"; echo=2;
+    Codim(4,6,intvec(1,1,1,5,5,5));
+    CodComInt(4,6,intvec(1,1,1));
+}
+//-----------------------------------------------------------------------------
+proc CodComIntZar(int n, int d, intvec  dl)       
+"USAGE:
+       CodComIntZar(integer_expression, integer_expression, integer vector_expression) 
+RETURN:
+    A positive integer. This is the codimension of the Zariski tangenet space of the Hodge 
+    locus corresponding to deformations of a complete intersection algebraic cycle of type 'dl' 
+    inside the Fermat variety of degree 'd' and dimension 'n'. This procedure computes the 
+    periods p_i of such a complete intersection algebraic cycle and then returns the rank of 
+    the corresponding [p_{i+j}] matrix. The base ring must contain 'n+1' variables and a 
+    parameter which is '2d'-th root of unity. The equality of its output with 'CodComInt' implies
+    a proof for the main theorem in [Movasati-Villaflor]. 
+    
+SEE ALSO:
+     PeriodLinearCycle, Matrixpij
+EXAMPLE:
+    example ; shows an example
+"
+{ 
+int i; int j; poly ko; for (i=1;i<=size(dl); i=i+1){ko=ko+var(i)^(dl[i]+1);}
+                   for (i=size(dl);i<=n+1; i=i+1){ko=ko+var(i)^2;}
+ideal I=okbase(std(jacob(ko)));
+intvec aa=0,0; intvec pp=0,1; for (i=1;i<=(n div 2); i=i+1){aa=aa,0,0; pp=pp,2*i,2*i+1; }
+intvec komak; 
+list Ilist; for (i=1;i<=size(I); i=i+1)
+                 {
+                 komak=leadexp(I[i]);
+                 for (j=1;j<=size(dl); j=j+1){ aa[2*j]=komak[j];}
+                 Ilist=insert(Ilist, aa, size(Ilist));
+                 }
+
+intvec mlist=d; for (i=1;i<=n; i=i+1){mlist=mlist,d;}
+matrix Per=PeriodLinearCycle(mlist, Ilist[1], pp,par(1));
+for (i=2;i<=size(Ilist); i=i+1) {Per=Per+PeriodLinearCycle(mlist, Ilist[i], pp,par(1));  }
+matrix A=Matrixpij(mlist, Per);  rank(A);
+
+}
+example
+{"EXAMPLE:"; echo=2;
+LIB "foliation.lib"; int d=8; int n=2; intvec dl=4,4;
+int i; intvec mlist=d; 
+for (i=1;i<=n; i=i+1){mlist=mlist,d;}
+ring r=(0,z), (x(1..n+1)),dp;
+poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+cp=subst(cp, x(1),z);  minpoly =number(cp);
+CodComIntZar(n,d,dl);
+}
+//-----------------------------------------------------------------------
+proc SumTwoLinearCycle(int n, int d, int m, list #)       
+"USAGE:
+       SumTwoLinearCycle(integer_expression, integer_expression, integer_expression, list_expresion) 
+RETURN:
+    A positive integer. This is the codimension of the Zariski tangenet space of the Hodge 
+    locus corresponding to deformations of a sum of two linear cycles inside the Fermat variety of 
+    degree 'd' and dimension 'n'. The intersection of these two linear cycles is a projective 
+    space of dimension 'm'. This procedure computes the periods p_i of such an algebraic cycle 
+    and then returns the rank of  the corresponding [p_{i+j}] matrix. The base ring must contain 
+    'n+1' variables and a  parameter which is '2d'-th root of unity. If the last optional entry is 
+     0: it only gives the period vector of the sum of two linear cycles. 
+     1: A list of two list, each containg the (a,b) of a linear cycles. These are the linear
+     cycles mainly used in the article 'Why should one'.
+     2: A list of two matrices, each being the period matrices of two linear cycles with intersection 
+     P^m. 
+    
+SEE ALSO:
+     PeriodLinearCycle, Matrixpij
+EXAMPLE:
+    example SumTwoLinearCycle; shows an example
+"
+{ 
+int i; intvec mlist=d; for (i=1;i<=n; i=i+1){mlist=mlist,d;}
+intvec aa1=0,0; intvec pp=0,1; for (i=1;i<=(n div 2); i=i+1){aa1=aa1,0,0; pp=pp,2*i,2*i+1; } 
+matrix Per1=PeriodLinearCycle(mlist, aa1, pp,par(1));
+intvec aa2; for (i=0;i<=m; i=i+1){aa2=aa2,0,0;} 
+for (i=m+1;i<=(n div 2); i=i+1){aa2=aa2,0,1;}  aa2=aa2[2..size(aa2)];
+matrix Per2=PeriodLinearCycle(mlist, aa2, pp,par(1));
+       matrix Periods=Per1+Per2;   
+       if (size(#)==0)
+           {
+           matrix A=Matrixpij(mlist, Periods);
+           return(rank(A));
+           }
+       else
+           {
+           if (#[1]==0){return(Periods);}
+           if (#[1]==1){return(list(list(aa1,pp),list(aa2,pp)));}
+           if (#[1]==2){return(list(Per1,Per2));}
+           } 
+}
+example
+{"EXAMPLE:"; echo=2;
+int d=6; int n=2;
+ring r=(0,z), (x(1..n+1)),dp;
+poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+cp=subst(cp, x(1),z);  minpoly =number(cp);
+intvec C1; intvec C2;  list resu; int i; 
+for (int m=n div 2;m>=-1; m=m-1)
+    {
+     C1=1; C2=d-1;  
+     for (i=1;i<=n div 2; i=i+1){C1=C1,1; C2=C2,d-1;}
+     C1=C2,C1; C2=C1;  
+     for (i=m+1;i<=n div 2; i=i+1){C2[i+1]=1;} 
+     "Dim of inter of l. cycles=m=", m;  
+     "Dim of Zariski tang. space= ", SumTwoLinearCycle(n,d,m); 
+     "Dim of inter of Hodge Loci= ",  2*Codim(n,d, C1)-Codim(n,d,C2);
+     "****************************";
+     } 
+    m=-1; 
+    SumTwoLinearCycle(n,d,m,0);
+    SumTwoLinearCycle(n,d,m,1);
+    SumTwoLinearCycle(n,d,m,2);
+}
+//---------------------------------------------------------------------------
+proc ConstantRank(int n, int d, int m)       
+"USAGE:
+       ConstantRank(integer_expression, integer_expression, integer_expression) 
+RETURN:
+    This procedure checks whether the [p_{i+j}] matrix for sum of two linear
+    cycles with arbitrary non-zero coefficients and with intersection 'P^m' has 
+    constant rank. The basering must have 'n+1' variables with a parameter which is
+    a '2d'-th root of unity. 
+    
+SEE ALSO:
+     PeriodLinearCycle, SumTwoLinearCycle, GoodMinor.
+EXAMPLE:
+    example ConstantRank; shows an example
+"
+{
+intvec mlist=d; for (int i=1;i<=n; i=i+1){mlist=mlist,d;}
+list ll=SumTwoLinearCycle(n,d,m,2);
+matrix Per1=ll[1]; matrix Per2=ll[2];
+matrix A=Matrixpij(mlist, Per1+Per2); int ran=rank(A); int check=0; 
+"Checking the generic rank"; 
+for (i=2;i<=ran+2; i=i+1)
+                  {i;  
+                   if (rank(Matrixpij(mlist, Per1+i*Per2))<>ran){check=1;}
+                  }
+if (check==1){"The generic rank is not", ran;}  
+list v=GoodMinor(A);
+A=Matrixpij(mlist, Per1+x(1)*Per2);
+return(factorize(det(submat(A, v[1],v[2])))); 
+}
+example
+{"EXAMPLE:"; echo=2;
+int n=4; int d; int m;
+int upd=6; int lod=3; //upper and lower bound of the degree. 
+  for (d=lod; d<=upd; d=d+1)
+    {
+    ring r=(0,z), (x(1..n+1)),dp;
+    poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+    cp=subst(cp, x(1),z);  minpoly =number(cp); 
+      for (m=-1;m<=n div 2-1; m=m+1)
+        {
+         list ll=ConstantRank(n,d,m); 
+         "(n,d,m)=(", n,d,m, ")"; ll; 
+         write(":a ConstantRankData", "(n,d,m)=", n,d,m); 
+         write(":a ConstantRankData", ll);
+        }
+    }  
+}
+//----------------------------------------------------------------------------
+proc SignPerm(intvec A)
+"
+USAGE:
+    SignPerm(integer vector_expression)
+RETURN: 
+    Integer plus or minus one which is the sign of the permutation 'A'.
+    'A' is supposed to be a permutation of 0,1,2,...,a-1, where a is 
+    its size of 'A'.
+"
+{
+int a=size(A); intmat B[a][a]; int i; int j; 
+for (i=1; i<=a;i=i+1)
+    {for (j=1; j<=a;j=j+1)
+       {if (A[i]+1==j){B[i,j]=1;}}
+    }
+return(det(B));
+}
+example
+{"Example:"; echo=2;
+    intvec A=intvec(0,1,2,4,3,5);
+    SignPerm(A); 
+} 
+//--------------------------------------------------------------------------------
+proc Monomials(list lvar, int tr, int which)
+"
+USAGE:
+    Monomials(list_expression, integer_expression, int_expression)
+RETURN: 
+   The list of all monomials in the variables of 'lvar' and
+   if which=0,  of degree less that or equal to 'tr' in each variable, 
+   if which=1,  of degree less  than or equal to 'tr', 
+   if which =2, a list of  list, the i-th list containing homogeneous polynomials of 
+   degree i.
+   if which=3, of degree less than or equal to 'tr', greater than or equal to 2  and  
+   in each degree less than or equal  to 'tr-2'. It is the same as the fourth list 
+   in the output of 'MixedHodgeFermat'. 
+   if which==4 of degree equal to 'tr',  and  in each degree less than or equal  to 'tr-2'.
+   This is mainly for the deformation space of the Fermat variety. 
+   
+   The variables are supposed to have weight one even if in  the base ring they 
+   have non-one weights. In the first  case the procedure first produce the list 
+   of exponent integer vectors and then the  monomials.    
+EXAMPLE: 
+    example Monomials; shows an example   
+"
+{
+if (which==0)
+  {
+  list out=1; poly P; list outexp; intvec kom=0; 
+  intvec finalvec=tr;  for (int i=2;i<=size(lvar); i=i+1)
+                         {finalvec=finalvec, tr; kom=kom,0;}
+  outexp=kom; int j; int dig; i=1; 
+  while (kom<>finalvec)
+   { 
+        if (kom[1]<tr)
+           {
+           kom[1]=kom[1]+1; 
+           outexp=insert(outexp, kom, size(outexp)); 
+           }
+        else
+           {
+           dig=1; 
+           while (kom[1+dig]==tr){dig=dig+1;}  
+           kom[1+dig]=kom[1+dig]+1; 
+           for (j=1;j<=1+dig-1; j=j+1 ){kom[j]=0;}
+           outexp=insert(outexp, kom, size(outexp));
+           }
+   P=1;         
+   for (j=1;j<=size(lvar); j=j+1 ){P=P*lvar[j]^(kom[j]);}
+   out=insert(out, P, size(out));
+   }
+  return(out);
+  }
+if (which==1 or which==2)
+  {
+  list out=1; list outhom; int i; int j; int k; poly P; list outhelp; int deP; 
+  for (i=0;i<=tr; i=i+1){outhom=insert(outhom, list(), size(outhom)); }
+  outhom[1]=1; 
+  for (i=1;i<=size(lvar); i=i+1 )
+       {
+       outhelp=out; 
+        for (k=1;k<=size(outhelp) ; k=k+1 )
+           {
+             for (j=1;j<=tr ; j=j+1 )
+               {
+               P=outhelp[k]*lvar[i]^j; deP=deg(P); 
+               if (deP<=tr)
+                  {out=insert(out, P, size(out));
+                  outhom[deP+1]=insert(outhom[deP+1], P, size(outhom[deP+1]));
+                  }  
+                  
+               }
+           }
+       }
+  if (which==1){return(out);}
+  if (which==2){return(outhom);}
+  }
+if (which==3 or which==4)
+    {
+  list out=1; list outhom;  int i; int j; int k; poly P; list outhelp; int deP;  
+  for (i=1;i<=size(lvar); i=i+1 )
+       {
+       outhelp=out; 
+        for (k=1;k<=size(outhelp) ; k=k+1 )
+           {
+             for (j=1;j<=tr-2 ; j=j+1 )
+               {
+               P=outhelp[k]*lvar[i]^j; deP=deg(P); 
+               if (deP<=tr)
+                  {out=insert(out, P, size(out));}
+               if (deP==tr)
+                  {outhom=insert(outhom, P, size(outhom));}   
+               }
+           }
+       }        
+  if (which==3)
+    {
+    for (i=1;i<=size(out); i=i+1 )
+      {
+      if (deg(out[i])<=1){out=delete(out, i); i=i-1; }  
+      }
+    return(out); 
+    }  
+    if (which==4)
+    {
+    return(outhom); 
+    }  
+    
+  
+  }
+  
+}
+example
+{"Example:"; echo=2;
+    ring r=0, (x,y),dp;
+    int d=5;
+    Monomials(list(x,y),d,0);
+    Monomials(list(x,y),d,1);
+    Monomials(list(x,y),d,2);
+    Monomials(list(x,y),d,3);
+    Monomials(list(x,y),d,4);
+}
+//---------------------------------------------------------------------------
+proc Abeta(poly xmon, int n, int d)
+"Note:
+   This procedure is used in TaylorSeries, EquHodge, SmoothReduced.
+"
+{
+for (int i=1;i<=n+1; i=i+1){xmon=xmon*var(i);}  number ou=number(deg(xmon))/number(d); return(ou); 
+}
+//---------------------------------------------------------------------------
+proc TaylorSeries(intvec mlist, list lmonx, number snum,  
+                  poly xbeta, int kint,  list BasisDR,  matrix Periods, 
+                  int tru, list #)
+"USAGE:
+     TaylorSeries(integer vector_expression, list_expression, number_expression,
+                  poly_expression, integer_expression, list_expression, matrix_expression,  
+                  integer_expression) 
+RETURN:
+    A polynomial. This is the truncated power series  of the integral of 'xbeta/f^{kint}' over a topological 
+    cycle in a deformation of the Fermat variety. 
+                       x_1^m_1+...x_{n+1}^{m_{n+1}}-sum_i t_i*lmonx[i]='snum'
+    where m_i's are the entries of 'mlist'. The deformation is done using all the polynomials in
+    'lmonx'. The first 'n+1' variables of the basering are reserved for x_1,...,x_{n+1} and then
+    we have 'size(lmonx)' variables t_i corresponding to coefficients of each polynomial in 'lmonx'.
+    The output is a polynomial in t_i's and in has degree less than or equal 'tru'. The weights of t_i are 1.   
+    The topological cycle is identified with its periods 'Periods'. We have  used the Griffiths-Steenbrink 
+    basis of the de Rham cohomology of the affine Fermat variety (the one of the form Omega/f^k).  
+    This is given in the list 'BasisDR'.  Note that 'Periods' is given as a matrix whereas 'BasisDR' as a 
+    list and the integration of 'BasisDR' over  the topological cycle is 'Periods'. If you want use a basis of
+    the Brieskorn module instead of 'BasisDR' you have to slightly modify this procedure. If the last optional
+    entry is given then the out put is a list of the homogeneous pieces of the Taylor series. 
+SEE ALSO:
+     Monomials, PochhammerSymbol
+EXAMPLE:
+    example TaylorSeries; shows an example
+"
+{
+  int n=size(mlist)-1;  int d=lcm(mlist); 
+  list kom; int i; int j;  
+  for (i=n+2; i<=n+1+size(lmonx); i=i+1)
+      {kom=insert(kom, var(i),size(kom));} //The list of t_i variables 
+  list lmont=Monomials(kom,tru,2);           //-----The list of list of   monomials in t_i-----
+  poly P; int nofa; bigint afac; int aal;  poly xbetabar;
+  number abeta;  poly PoSe; number pf; number rn; int sumintrn; 
+  number abetabar; number cos; poly pernum; 
+  
+  int e; list lPoSe; for (i=0; i<=tru; i=i+1){lPoSe=insert(lPoSe,0);}
+  for (i=1; i<=size(lmont); i=i+1)
+    {
+    for (e=1; e<=size(lmont[i]); e=e+1)
+     {
+       P=lmont[i][e]*xbeta; nofa=0; afac=1; 
+       for (j=1; j<=size(lmonx); j=j+1)
+           {
+           P=subst(P, var(n+1+j), lmonx[j]);
+           aal=leadexp(lmont[i][e])[n+1+j];
+           nofa=nofa+aal;
+           afac=afac*factorial(aal);
+           }
+        abeta=Abeta(P,n,d);
+        cos=1/number(snum^nofa*afac)*PochhammerSymbol( abeta-kint-nofa+1, kint+nofa-1);
+        if (cos<>0)
+           {
+            pf=1; abetabar=abeta; sumintrn=0;
+            xbetabar=1;
+            for (j=1; j<=n+1; j=j+1)
+              {
+              rn=(leadexp(P)[j]+1)/number(mlist[j]);
+              pf=pf*PochhammerSymbol( rn-int(rn), int(rn)); 
+              abetabar=abetabar-int(rn);
+              sumintrn=sumintrn+int(rn); 
+              if (pf<>0){xbetabar=xbetabar*var(j)^(leadexp(P)[j]-int(rn)*mlist[j]);} 
+              }
+            pf=pf/PochhammerSymbol(abetabar, sumintrn); //----Periods in the Griffiths-Steenbrink basis---   
+            if (pf<>0)
+              {
+               pf=pf*factorial(int(abetabar))/PochhammerSymbol(abetabar-int(abetabar), int(abetabar))*snum^(int(abeta)+1);
+                    for (j=1; j<=size(BasisDR); j=j+1){if (BasisDR[j]==xbetabar){pernum=Periods[1,j];} } 
+               PoSe=PoSe+lmont[i][e]*cos*pf*pernum;
+               lPoSe[i]=lPoSe[i]+lmont[i][e]*cos*pf*pernum;
+              }
+           }
+      }   
+    }
+if (size(#)<>0){return(lPoSe);}else{return(PoSe);}     
+}
+example
+{"Example:"; echo=2;
+   //This example is mainly for one parameter families.
+   intvec mlist=3,2;   int n=size(mlist)-1;   
+   int d=lcm(mlist); list wlist;  
+   for (int i=1; i<=size(mlist); i=i+1)
+       { wlist=insert(wlist, (d div mlist[i]), size(wlist));} 
+   
+   ring r=(0,t(1)), (x(1..n+1)),wp(wlist[1..n+1]);
+   poly f; for (i=1; i<=n+1; i=i+1){f=f+var(i)^mlist[i];} 
+   f=f-(-1)-t(1)*var(1);
+   matrix PF=PFeq(f,poly(1),t(1));
+   list ll=MixedHodgeFermat(mlist);
+   list BasisDR=ll[1][1];  for (int i=2; i<=size(ll[1]); i=i+1){ BasisDR=BasisDR+ll[1][i];}
+   
+   wlist=insert(wlist, 1 , size(wlist));  
+   ring r1=0, (x(1..n+1),t(1)),wp(wlist[1..size(wlist)]); 
+   list lmonx=var(1); 
+   poly xbeta=1; number snum=-1; int tru=10; 
+   int kint=int(Abeta(xbeta,n,d))+1; 
+   list BasisDR=imap(r, BasisDR); BasisDR;  
+   matrix Periods[1][size(BasisDR)]; Periods[1,1]=1; Periods[1,2]=0; 
+   poly Po=TaylorSeries(mlist, lmonx, snum, xbeta, kint, BasisDR, Periods,  tru);
+   matrix PF=imap(r, PF); Po; PF; poly check;
+   for (int i=1; i<=ncols(PF); i=i+1){check=check+PF[1,i]*Po; Po=diff(Po,t(1));}
+   check; //-----valid only for kint=1; 
+   
+   TaylorSeries(mlist, lmonx, snum, xbeta, kint, BasisDR, Periods,  tru,0);
+}
+//---------------------------------------------------------------------------------------------------
+proc aIndex(intvec zarib1, intvec zarib2)
+"USAGE:
+    aIndex(integer vector_expression, integer vector_expression)
+RETURN:
+    A list of elements of all elements '(a_1,a_2,...a_k)'  such that
+    'a_i's are integers with 
+                       zarib1[i]<= a_i<=zarib2[i]
+    This was originally designed for  the 'a' index of the set of linear cycles 
+    in the Fermat variety of degree 'd' and dimension  'n' for which 
+                    zarib1=0,0,..,0 and zarib2=d-1,d-1,..,d-1. 
+SEE ALSO: 
+
+EXAMPLE: 
+    example aIndex; shows an example
+"
+{ 
+  int pow=size(zarib1);
+  list outexp=zarib1; int j; int dig;
+  intvec z1=zarib1; 
+  while (zarib1<>zarib2)
+   { 
+        if (zarib1[pow]<zarib2[pow])
+           {
+           zarib1[pow]=zarib1[pow]+1; 
+           outexp=insert(outexp, zarib1, size(outexp)); 
+           }
+        else
+           {
+           dig=1; 
+           while (zarib1[pow-dig]==zarib2[pow-dig]){dig=dig+1;}  
+           zarib1[pow-dig]=zarib1[pow-dig]+1; 
+           for (j=1;j<=dig; j=j+1 ){zarib1[pow-j+1]=z1[pow-j+1];}
+           outexp=insert(outexp, zarib1, size(outexp));
+           }
+   }
+return(outexp);
+}
+example
+{"EXAMPLE:"; echo=2; 
+    aIndex(intvec(-1,1,2), intvec(0,3,6)); 
+}
+//--------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+proc remove_element(intvec vec, int pos)
+"USAGE: 
+	remove_element(integer vector_expression, integer_expression)
+RETURN:
+	 This procedure returns a vector with the element at position *pos* removed.
+	 In the case, the integer *pos* is bigger than the size of the vector *vec* 
+	 no element is removed.
+	 In the case, vec just has 1 element and that element is removed. An integer vector 
+	 with just one -1 is returned.
+	 Author: Enzo Aljovin
+EXAMPLE: 
+    example remove_element; shows an example
+"
+{
+	int n = size(vec);
+	if(pos > n){
+		return(vec);
+	}else{
+		intvec vec_update = -1;
+		for(int j = 1; j<pos; j++){
+			vec_update[j] = vec[j];
+		}
+		for(int k = pos+1; k<=n; k++){
+			vec_update[k-1] = vec[k];
+		}
+		return(vec_update);
+	}
+}
+example
+{
+	"Example:"; 
+	echo   = 2;
+	ring r = 0, x, dp;
+	intvec vec = 1,2,3,4,5;
+	remove_element(vec, 3);
+	vec = 5;
+	remove_element(vec, 1);
+}
+//----------------------------------------------------------------------------------------------
+proc find_min(intvec vec)
+"
+USAGE:
+    find_min(integer vector_expression)
+RETURN:
+    This procedure returns an intvec containing 2 numbers.
+    The first one is the minimum element among the elements of the vector 'vec'.
+    The second one indicates the index of the first occurence of that minimum.
+    Author: Enzo Aljovin
+EXAMPLE: 
+    example find_min; shows an example     
+" 
+{
+	intvec out;
+
+	if(size(vec) == 0){
+		out[1] = -1;
+		out[2] = -1;
+		return(out);
+	}
+
+	int element  = vec[1];
+	int position = 1;
+	for(int i=1; i<=size(vec); i++){
+		if(vec[i] < element){
+			element  = vec[i];
+			position = i;
+		}
+	}
+	out[1] = element;
+	out[2] = position;
+	return(out);
+}
+example
+{
+	"Example:"; 
+	echo   = 2;
+	ring r = 0, x, dp;
+	intvec vec = 3,10,-1,5;
+	find_min(vec);
+}
+//----------------------------------------------------------------------------------------------
+proc bIndex_helper(intvec vec, intvec tmp, int length)
+"
+USAGE:
+    bIndex_helper(integer vector_expression, integer vector_expression, integer_expression)
+RETURN:
+	This procedure returns a list containing sequences (tmp, b1, ..., b_l), with l = length,
+	satisfying the following properties
+    	- every b_k is an element of vec
+    	- if i != j then b_i != b_j
+    	- for every i an odd number, b_i is the minimum element of {1 .. n}\{b_1, ... b_(i-1)}
+    	Author: Enzo Aljovin
+SEE ALSO:
+	bIndex
+EXAMPLE: 
+	example bIndex_helper; shows an example     
+" 
+{
+	list permutations;
+	if(length == 0){
+		permutations[1] = tmp;
+		return(permutations);
+	}else{
+		// Minimum element is founded
+		intvec data_min = find_min(vec);
+		int minimum = data_min[1];
+		int pos = data_min[2];
+		
+		// Both vec and tmp are updated
+		vec = remove_element(vec, pos);
+		if((size(tmp) == 1) and (tmp[1] == -1)){
+			tmp = minimum;
+		}else{
+			tmp = tmp, minimum;
+		}
+
+		int n = size(vec);
+
+		// Recursive call
+		intvec tmp_update;
+	        intvec vec_update;
+	        list new_elements;
+		for(int k = 1; k<=n; k++){
+			tmp_update = tmp, vec[k];
+			vec_update = remove_element(vec, k);
+			new_elements = bIndex_helper(vec_update, tmp_update, length - 2);
+
+			// new permutations are added to the list
+			permutations = permutations + new_elements;
+		}
+		return(permutations);
+	}
+}
+example
+{
+	"Example:"; 
+	echo   = 2;
+	ring r = 0, x, dp;
+	intvec vec = 1,4,6,9;
+	intvec tmp = 2,3;
+	int length = 2;
+	bIndex_helper(vec, tmp, length);
+}
+//-----------------------------------------------------------------------------------------------
+proc bIndex(int n)     
+"
+USAGE:
+	bIndex(integer_expression)
+RETURN:
+	This procedure returns a list containing the subset of the permutations (b_1, ..., b_n) 
+	in the elements {1 .. n} such that
+    	- b_1 = 1
+    	- for every i an odd number, b_i is the minimum element of {1 .. n}\setminus{b_1, ... b_(i-1)}
+    	Related to linear cycles, note that n-2 is the dimension of the Fermat variety anot not n. 
+    	Author: Enzo Aljovin
+SEE ALSO:
+	bIndex_helper
+EXAMPLE: 
+	example bIndex; shows an example     
+" 
+{
+	intvec vec = 1 .. n;
+	intvec tmp = -1;
+	list permutations = bIndex_helper(vec, tmp, n);
+	return(permutations);
+}
+example
+{
+	"Example:"; 
+	echo   = 2;
+	ring r = 0, x, dp;
+	int n  = 6;
+	bIndex(n);
+}
+//---------------------------------------------------------------------------------------------------
+proc HodgeLocusIdeal(intvec mlist, list lmonx, list Fn2p1, list BasisDR,  matrix MiddlePeriods, int tru, list #)
+"USAGE:
+    HodgeLocusIdeal(integer vector_expression, list_expression, list expression,
+                    list_expression, matrix_expression, integer_expression, list_expression) 
+RETURN:
+    Ideal or a list. This is the ideal of the Hodge locus corresponding to the topological
+    cycle identified with its Middle 'MiddlePeriods' for the deormation of the classical Fermat variety 
+                  x_1^d+...x_{n+1}^d-sum_i t_i*lmonx[i]+1=0
+    and truncated up to monimial of degree > 'tru'. The base ring  and the last optional entry are  
+    the same as in 'TaylorSeries'. 'xbeta' is replaced with the list 'Fn2p1' and 'snum' is set to one. 'kint'
+    is computed for each entry of 'Fn2p1'.
+SEE ALSO:
+     TaylorSeries,
+EXAMPLE:
+    example HodgeLocusIdeal; shows an example
+"
+{
+    int n=size(mlist)-1;   int d=lcm(mlist); int i;
+    //--"Defining the truncated ideal of the Hodge locus";
+    list II;  int kint; list Po;
+    int snum=-1;
+    
+    int hn2=size(Fn2p1); //---Hodge number h^{n/2+1}
+    int hn2n2=size(BasisDR)-2*hn2; //---Hodge number h^{n/2, n/2}  
+    matrix Periods[1][size(BasisDR)]; 
+    Periods[1,hn2+1..hn2+hn2n2]=MiddlePeriods;
+    
+    "Number of generators of the Hodge locus ideal:", size(Fn2p1);  
+    for (i=1; i<=size(Fn2p1); i=i+1)
+        {
+         Fn2p1[i];
+         kint=int(Abeta(Fn2p1[i],n,d))+1;
+           if (size(#)==0)
+               {
+               Po=TaylorSeries(mlist, lmonx, snum, Fn2p1[i], kint, BasisDR, Periods,  tru);
+               II=insert(II,Po[1],size(II));
+               }
+           else
+               {
+               Po=TaylorSeries(mlist, lmonx, snum, Fn2p1[i], kint, BasisDR, Periods,  tru,#[1]);
+               II=insert(II,Po,size(II));
+               } 
+         
+         }
+return(II);
+}
+example
+{"Example:"; echo=2;
+//---The period of sum of two linear cycles------------
+intvec mlist=3,3,3,3,3;  int m=0;
+int tru=3;
+int n=size(mlist)-1;   
+int d=lcm(mlist); int i;
+    list wlist;         //--weight of the variables
+    for (i=1; i<=size(mlist); i=i+1)
+        { wlist=insert(wlist, (d div mlist[i]), size(wlist));} 
+    ring r=0, (x(1..n+1)),wp(wlist[1..n+1]); 
+    list ll=MixedHodgeFermat(mlist);
+    list BasisDR;            for (i=1; i<=size(ll[1]); i=i+1)  { BasisDR=BasisDR+ll[1][i];}
+    list Fn2p1;              for (i=1; i<=n div 2; i=i+1)  { Fn2p1=Fn2p1+ll[1][i];}                        
+    list lmonx=ll[4];        //Put ll[4] if you want a full family of hypersurfaces
+    
+    for (i=1; i<=size(lmonx); i=i+1)
+        { wlist=insert(wlist, 1 , size(wlist));}
+    ring r2=(0,z), (x(1..n+1), t(1..size(lmonx))),wp(wlist[1..n+1+size(lmonx)]);
+    poly cp=cyclotomic(2*d);   int degext=deg(cp) div deg(var(1)); cp=subst(cp, x(1),z);    
+    minpoly =number(cp); //--z is the 2d-th root of unity---
+    list BasisDR=imap(r,BasisDR);   list lmonx=imap(r,lmonx);
+ 
+    matrix GPeriods[1][size(BasisDR)];  GPeriods=BasisDR[1..size(BasisDR)]; 
+    int snum=-1; 
+    //-----defining the period vector
+    def brin=basering;
+        ring rr=(0,z), (x(1..n+1)),dp;
+         poly cp=cyclotomic(2*d); degext=deg(cp) div deg(var(1));
+         cp=subst(cp, x(1),z); minpoly =number(cp);
+         matrix Per=SumTwoLinearCycle(n,d,m,0);               
+    //------------------------------
+    setring  brin;
+    matrix MPeriods=imap(rr, Per);
+    list Fn2p1=imap(r,Fn2p1);  
+    HodgeLocusIdeal(mlist, lmonx, Fn2p1, BasisDR, MPeriods, tru,0); 
+}
+//--------------------------------------------------------------------------------------------------
+proc SmoothReduced(intvec mlist, int tru, list lcycles, intvec zarib1, intvec zarib2, list #)
+"USAGE:
+     SmoothReduced(integer vector_expression, integer_expression, list_expression, 
+                   integer vector_expression, integer_vector expression) 
+RETURN:
+    A list of two lists. This procedure verifies whether the Hodge locus of the Fermat variety
+                  x_1^d+...x_{n+1}^d-sum_i t_i*lmonx[i]+1=0
+                  
+    is  'tru'-smooth and reduced or not, where 'd's are given in 'mlist'.  The 
+    list of (a,b)-index of linear cycles is given by 'lcycles'. The Hodge loci 
+    corresponds to all algebraic cycles 
+                   'sum_i r_i*P^{n/2}_{i}'
+    for all   'zarib1[i]<=r_i<=zarib2[i]'. The first list contains the reduced cases (r_i) and the 
+    second list contains the nonreduced (r_i)'s. 
+    If the last optional entry is not given then it will consider the full family of hypersurfaces. 
+    If it is given and it is '0' then it will report  what it is doing. 
+    If it is '1' it will consider the half-half family of hypersurfaces. 
+    
+SEE ALSO:
+     TaylorSeries, HodgeLocusIdeal, 
+EXAMPLE:
+    example SmoothReduced; shows an example
+"
+{
+    int n=size(mlist)-1;   int d=lcm(mlist); int i;
+    list wlist;         //--weight of the variables
+    for (i=1; i<=size(mlist); i=i+1)
+        { wlist=insert(wlist, (d div mlist[i]), size(wlist));} 
+    
+    ring r=(0,z), (x(1..n+1)),wp(wlist[1..n+1]); 
+    poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+    cp=subst(cp, x(1),z); minpoly =number(cp);
+    
+    list ll=MixedHodgeFermat(mlist);
+    list BasisDR;            for (i=1; i<=size(ll[1]); i=i+1)  { BasisDR=BasisDR+ll[1][i];}
+    list Fn2p1;              for (i=1; i<=n div 2; i=i+1)  { Fn2p1=Fn2p1+ll[1][i];}
+    //------Here you can give any list of monomials for the deformation space.
+    list lmonx; 
+    int checking; 
+           if (size(#)==0)
+              {  lmonx=ll[4];} //Full family of hypersurfaces
+           else
+             {
+             if (#[1]==1)
+              {
+              list vareven; list varodd;    //half-half family of hypersurfaces. 
+              for (i=1; i<=n-1; i=i+2)
+                  {
+                  vareven=insert(vareven, var(i+1), size(vareven)); 
+                  varodd =insert(varodd,  var(i), size(varodd));
+                  }
+              varodd =insert(varodd,  var(n+1), size(varodd));
+              lmonx=Monomials(vareven, d,3)+Monomials(varodd, d,4);  lmonx;    
+              }
+             if( #[1]==0){ lmonx=ll[4]; checking=1;}     
+             }    
+    //--------Defining the period vectors---------------------------------
+          list Periods;
+          for (i=1; i<=size(lcycles); i=i+1)
+              {
+              Periods=insert(Periods, 
+                  PeriodLinearCycle(mlist, lcycles[i][1], lcycles[i][2],par(1)), size(Periods));
+              }
+    
+    for (i=1; i<=size(lmonx); i=i+1)
+        { wlist=insert(wlist, 1 , size(wlist));}
+    ring r2=(0,z), (x(1..n+1), t(1..size(lmonx))),wp(wlist[1..n+1+size(lmonx)]);
+    poly cp=cyclotomic(2*d);   degext=deg(cp) div deg(var(1)); cp=subst(cp, x(1),z);    
+    minpoly =number(cp); //--z is the 2d-th root of unity---
+    list BasisDR=imap(r,BasisDR);   list lmonx=imap(r,lmonx);
+    list Fn2p1=imap(r,Fn2p1);
+    list Periods=imap(r, Periods);
+
+    //---Defining the truncated ideal of the Hodge locus.--------   
+    //---specifying 'size(lcycles)'-variables to each zarib would make this faster.         
+        list lII; list II;  intvec z1mosaviz2; 
+        if (zarib1==zarib2)
+           {
+           Periods[1]=zarib1[1]*Periods[1]; 
+           for (i=2; i<=size(Periods); i=i+1){Periods[1]=Periods[1]+zarib1[i]*Periods[i];}
+           II=HodgeLocusIdeal(mlist, lmonx, Fn2p1, BasisDR, Periods[1], tru,0);
+           lII=list(II); z1mosaviz2=zarib1;
+           zarib1=1; zarib2=1;  //I am changing the content of zarib1 and zarib2
+            
+           }
+        else
+         {
+          for (i=1; i<=size(Periods); i=i+1)
+          {
+          lII=insert(lII, HodgeLocusIdeal(mlist, lmonx, Fn2p1, BasisDR, Periods[i], tru,0), size(lII));
+          }
+         }
+  list Al=aIndex(zarib1,zarib2); int N; int j; poly P; int k; list komak; 
+  int k_1;  int k_2; list lofg; list SR; ideal Ikom; ideal IIi; list SR2; 
+  list IIel; 
+  list redli; list nonredli;
+  
+  "Checking the reducedness"; 
+     for (N=1; N<=size(Al); N=N+1)
+     { 
+         II=list();
+         for (k=1; k<=size(Fn2p1); k=k+1)
+             {
+             komak=list(); 
+             for (j=0; j<=tru; j=j+1)
+                 {
+                 P=0; 
+                 for (i=1; i<=size(lII); i=i+1)
+                     {
+                     P=P+Al[N][i]*lII[i][k][j+1];
+                     }
+                 komak=insert(komak, P, size(komak));    
+                 }
+             II=insert(II, komak, size(II));    
+             }         
+      //--"Defining a minimal number of generators for the ideal of Hodge locus"; 
+      k=1;  
+      while (II[k][2]==0){k=k+1;}
+      Ikom=II[k][2]; 
+      IIi=II[k][2];
+      SR=k; 
+      for (i=k+1; i<=size(Fn2p1); i=i+1)
+          {
+          Ikom=std(Ikom);
+          if (reduce(II[i][2], Ikom)<>0)
+                                     {
+                                     Ikom=Ikom, II[i][2]; SR=insert(SR, i, size(SR));
+                                     IIi=IIi, II[i][2]; 
+                                     }
+          }
+   
+   
+      if (checking==1){"Minimum number of generators:", size(SR); 
+                       "Other generators modulo the smaller ideal";
+                      }
+      SR2=list(); for (i=1; i<=size(Fn2p1); i=i+1){SR2=insert(SR2,i, size(SR2));} 
+      SR2=RemoveList(SR2, SR); 
+        
+        
+        
+      komak=list(); P=0;   IIel=list();  
+      for (i=1; i<=size(SR2); i=i+1)
+          {
+          if (checking==1){"The generator:", Fn2p1[SR2[i]];}
+                  IIel=II[SR2[i]];
+                  P=0; lofg=list(); 
+                  for (j=2; j<=size(IIel); j=j+1)
+                      {
+                      if (checking==1){"Checking ",j-1,"-reducedness.";}
+                      P=IIel[j]-P; komak=division(P, IIi);   P=0;
+                     if (komak[2][1]<>0)
+                                  {
+                                  if (checking==1){"The  Hodge locus for (a_1,a_2)=", Al[N], "is not", j-1, "-smooth or reduced.";}
+                                  nonredli=insert(nonredli, Al[N], size(nonredli));
+                                  j=size(IIel)+1; i=size(SR2)+1;  //---getting out of the loop.
+                                  }
+                     lofg=insert(lofg, komak[1], size(lofg));  
+                            for (k_1=1; k_1<=size(lofg); k_1=k_1+1)
+                                {
+                                 for (k_2=1; k_2<=size(SR); k_2=k_2+1)
+                                     {
+                                      if (j<size(IIel))
+                                         {
+                                         P=P+lofg[k_1][k_2,1]*II[SR[k_2]][j-k_1+2]; 
+                                         }
+                                     } 
+                                }
+                             
+                      }
+                 
+            }
+
+     }
+               
+if  (zarib1==zarib2)
+    {
+    if (size(nonredli)==0)
+       {return(list(list(z1mosaviz2),list()));}
+    else
+       { return(list(list(), list(z1mosaviz2))); }
+    }
+else{    
+    redli=RemoveList(Al, nonredli); 
+    return(list(redli, nonredli));
+    }
+}
+example
+{"Example:"; echo=2;
+  int n=6; int d=3; int m=1; int tru=5; int zb=10; 
+  intvec zarib1=1,-zb; intvec zarib2=zb, zb;
+  intvec mlist=d;  for (int i=1;i<=n; i=i+1){mlist=mlist,d;}
+  ring r=(0,z), (x(1..n+1)),dp;
+  poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+  cp=subst(cp, x(1),z); minpoly =number(cp);
+  list lcycles=SumTwoLinearCycle(n,d,m,1); lcycles;  
+  SmoothReduced(mlist,tru, lcycles, zarib1, zarib2,1);
+  
+}
+//---------------------------------------------------------------------------------------------
+proc EquHodge(intvec mlist, list lmonx, number snum, list BasisDR,  matrix Periods, list Fn2p1)
+"USAGE:
+     EquaHodge(integer vector_expression, list_expression, number_expression,
+                                              list_expression, matrix_expression, list_expression) 
+RETURN:
+    A list of monomials which is a subset of 'Fn2p1'. For a polynomial P in 'Fn2p1', P Omega/f^k is
+    an element of the de Rham cohomology of the Fermat variety. For the descripition of other entries
+    see 'TaylorSeries'. This procedure find a basis of the vector space of the linear part of the 
+    integration of 'Fn2p1'. 
+SEE ALSO:
+     TaylorSeries;
+EXAMPLE:
+    example EquHodge; shows an example
+"
+{ 
+  int n=size(mlist)-1;   int d=lcm(mlist);
+  poly Po;  list II; int kint; 
+  for (int i=1; i<=size(Fn2p1); i=i+1)
+        {
+         kint=int(Abeta(Fn2p1[i],n,d))+1;
+         Po=TaylorSeries(mlist, lmonx, snum, Fn2p1[i], kint, BasisDR, Periods,  1);
+         II=insert(II,Po, size(II));
+         }
+   list out; int k=1; 
+   while (II[k]==0){k=k+1;}
+   ideal IIi=II[k]; out=k; 
+   for (i=k+1; i<=size(Fn2p1); i=i+1)
+       {
+       IIi=std(IIi);
+       if (reduce(II[i], IIi)<>0){IIi=IIi, II[i]; out=insert(out, i, size(out)); }
+       }
+return(out)
+}
+example
+{"Example:"; echo=2;
+intvec mlist=3,3,3,3,3,3,3;                                                                                        
+int n=size(mlist)-1;   int d=lcm(mlist);
+intvec av=0,0;  intvec bv=0,1;
+for (int i=1;i<=(n div 2); i=i+1){av=av,0,0; bv=bv,2*i,2*i+1;}   //--The data of a linear cycle.
+    list wlist;         //--weight of the variables
+    for (i=1; i<=size(mlist); i=i+1)
+       { wlist=insert(wlist, (d div mlist[i]), size(wlist));} 
+    ring r=0, (x(1..n+1)),wp(wlist[1..n+1]); 
+    list ll=MixedHodgeFermat(mlist);
+    list BasisDR;            for (i=1; i<=size(ll[1]); i=i+1)  { BasisDR=BasisDR+ll[1][i];}
+    list Fn2p1;              for (i=1; i<=n div 2; i=i+1)  { Fn2p1=Fn2p1+ll[1][i];}                        
+    list lmonx=ll[4];                                         //Put ll[4] if you want a full family of hypersurfaces
+    for (i=1; i<=size(lmonx); i=i+1)
+        { wlist=insert(wlist, 1 , size(wlist));}
+        
+    ring r2=(0,z), (x(1..n+1), t(1..size(lmonx))),wp(wlist[1..n+1+size(lmonx)]);
+    poly cp=cyclotomic(2*d);   int degext=deg(cp) div deg(var(1)); cp=subst(cp, x(1),z);    
+    minpoly =number(cp); //--z is the 2d-th root of unity---
+    list BasisDR=imap(r,BasisDR);   list lmonx=imap(r,lmonx);
+ 
+    matrix GPeriods[1][size(BasisDR)];  GPeriods=BasisDR[1..size(BasisDR)]; 
+    int snum=-1;
+    def brin=basering; 
+         ring rr=(0,z), (x(1..n+1)),dp;
+         poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+         cp=subst(cp, x(1),z); minpoly =number(cp); 
+         matrix Per=PeriodLinearCycle(mlist, av, bv,z); 
+    setring  brin;
+    matrix Per=imap(rr, Per);
+    matrix Periods[1][size(BasisDR)];   list ll=imap(r, ll); 
+    int hn2; int hn2n2=size(ll[1][(n div 2)+1]);   
+    for (i=1; i<=(n div 2); i=i+1){hn2=hn2+size(ll[1][i]); } 
+    Periods[1,hn2+1..hn2+hn2n2]=Per;
+    list Fn2p1=imap(r,Fn2p1); 
+    EquHodge(mlist, lmonx, snum, BasisDR, Periods, Fn2p1); 
+    Fn2p1[1..size(Fn2p1)];   
+}
+//----------------------------------------------------------------------------------------------------
+proc SmoothReduced2(intvec mlist, int m, int tru, int a_1, int a_2)
+"USAGE:
+     SmoothReduced2(integer vector_expression, integer_expression, 
+            integer_expression, integer_expression, integer_expression) 
+RETURN:
+    This procedure verifies whether the Hodge locus corresponding to sum of two linear
+    cycles 
+                  'a_1*P^{n/2}+a_2*cP^{n/2}' 
+    with intersection 'P^m' in the Fermat variety
+                  x_1^m_1+...x_{n+1}^{m_{n+1}}-sum_i t_i*lmonx[i]+1=0
+                  
+    is  'N'-smooth and reduced or not, where m_i's are given in 'mlist'. For now, use it 
+    for equal m_i's. It also reports what it is doing. If at the end of the report one gets
+    only zeros then the Hodge locus is smooth and reduced, otherwise not. 
+SEE ALSO:
+     TaylorSeries, PeriodLinearCycle
+EXAMPLE:
+    example SmoothReduced2; shows an example
+"
+{
+    int n=size(mlist)-1;   int d=lcm(mlist); int i;
+    list wlist;         //--weight of the variables
+    for (i=1; i<=size(mlist); i=i+1)
+        { wlist=insert(wlist, (d div mlist[i]), size(wlist));} 
+    
+    ring r=0, (x(1..n+1)),wp(wlist[1..n+1]); 
+    list ll=MixedHodgeFermat(mlist);
+    list BasisDR;            for (i=1; i<=size(ll[1]); i=i+1)  { BasisDR=BasisDR+ll[1][i];}
+    list Fn2p1;              for (i=1; i<=n div 2; i=i+1)  { Fn2p1=Fn2p1+ll[1][i];}                        
+    list lmonx=ll[4];        //Put ll[4] if you want a full family of hypersurfaces
+    
+    
+    for (i=1; i<=size(lmonx); i=i+1)
+        { wlist=insert(wlist, 1 , size(wlist));}
+    ring r2=(0,z), (x(1..n+1), t(1..size(lmonx))),wp(wlist[1..n+1+size(lmonx)]);
+    poly cp=cyclotomic(2*d);   int degext=deg(cp) div deg(var(1)); cp=subst(cp, x(1),z);    
+    minpoly =number(cp); //--z is the 2d-th root of unity---
+    list BasisDR=imap(r,BasisDR);   list lmonx=imap(r,lmonx);
+ 
+    matrix GPeriods[1][size(BasisDR)];  GPeriods=BasisDR[1..size(BasisDR)]; 
+    int snum=-1; 
+    def brin=basering;
+"Defining the period vector of sum of two linear cycles"; 
+         ring rr=(0,z), (x(1..n+1)),dp;
+         poly cp=cyclotomic(2*d); degext=deg(cp) div deg(var(1));
+         cp=subst(cp, x(1),z); minpoly =number(cp);
+              intvec av1=0,0; intvec bv=0,1; for (i=1;i<=(n div 2); i=i+1){av1=av1,0,0; bv=bv,2*i,2*i+1;} 
+              matrix Per1=PeriodLinearCycle(mlist, av1, bv,par(1));
+              intvec av2; for (i=0;i<=m; i=i+1){av2=av2,0,0;} 
+              for (i=m+1;i<=(n div 2); i=i+1){av2=av2,0,1;}  av2=av2[2..size(av2)];
+              matrix Per2=PeriodLinearCycle(mlist, av2, bv,par(1));
+              
+              matrix Per=a_1*Per1+a_2*Per2;               
+    
+    setring  brin;
+    matrix Per=imap(rr, Per);
+    matrix Periods[1][size(BasisDR)];   list ll=imap(r, ll); 
+    int hn2; int hn2n2=size(ll[1][(n div 2)+1]);   
+    for (i=1; i<=(n div 2); i=i+1){hn2=hn2+size(ll[1][i]); } 
+    Periods[1,hn2+1..hn2+hn2n2]=Per;
+    
+    
+"Defining the truncated ideal of the Hodge locus";
+//--From now on this procedure is different from SmoothReduced1
+    list Fn2p1=imap(r,Fn2p1); 
+    list II;  int kint; list Po;  list SR2; 
+    for (i=1; i<=size(Fn2p1); i=i+1)
+        {
+         "The generator:", Fn2p1[i];
+         kint=int(Abeta(Fn2p1[i],n,d))+1;
+         Po=TaylorSeries(mlist, lmonx, snum, Fn2p1[i], kint, BasisDR, Periods,  tru,0);
+         II=insert(II,Po,size(II));
+         SR2=insert(SR2, i, size(SR2));
+         }
+         
+"Defining a minimal number of generators for the ideal of Hodge locus";
+//--You could use II and avoid the usage of EquHodge.----- 
+list SR=EquHodge(mlist, lmonx, snum, BasisDR, Periods, Fn2p1);
+"Number of generators is:", size(Fn2p1);
+"Minimum number of generators:", size(SR); 
+
+"The ideal of linear parts of a minimum number of generators"; 
+ideal IIi;   for (i=1; i<=size(SR); i=i+1)
+                 { 
+                 IIi=IIi, II[SR[i]][2];//--linear parts
+                 } 
+                 IIi=IIi[2..size(SR)+1];
+                 
+"Other generators modulo the smaller ideal";                
+SR2=RemoveList(SR2, SR); int Answer=0; 
+list lofg; list komak; poly Pol; int j; int k_1;  int k_2; list IIel;  
+           for (i=1; i<=size(SR2); i=i+1)
+               {
+                "The generator:", Fn2p1[SR2[i]];
+                  IIel=II[SR2[i]];
+                  Pol=0; lofg=list(); 
+                  for (j=2; j<=size(IIel); j=j+1)
+                     {
+                     "Checking ",j-1,"-reducedness.";
+                     Pol=IIel[j]-Pol; 
+                     komak=division(Pol, IIi);
+                     Pol=0;
+                     if (komak[2][1]<>0){
+                                         "The  Hodge locus is not smooth or reduced.";
+                                         Answer=1; 
+                                        }
+                     lofg=insert(lofg, komak[1], size(lofg));  
+                            for (k_1=1; k_1<=size(lofg); k_1=k_1+1)
+                               {
+                                 for (k_2=1; k_2<=size(SR); k_2=k_2+1)
+                                     {
+                                      if (j<size(IIel))
+                                         {
+                                         Pol=Pol+lofg[k_1][k_2,1]*II[SR[k_2]][j-k_1+2]; 
+                                         }
+                                     } 
+                               }
+                             
+                     }
+                 
+               }
+
+
+if (Answer==1){"The  Hodge locus is not smooth or reduced.";}
+else{"The  Hodge locus is smooth and  reduced.";}  
+    
+}
+example
+{"Example:"; echo=2;
+  int d; int tru=2; 
+  int m; int n=4;
+  int dub=10; //--The upper bound for the degre
+  int dlb=3-((n-4) div n);//---The lower bound for the degree--
+  intvec mlist; int i;  
+  
+  for (d=dlb; d<=dub; d=d+1)
+      {
+       mlist=d; for (i=1;i<=n; i=i+1){mlist=mlist,d;}
+       for (m=-1; m<=n div 2; m=m+1)
+         {
+          "*********************************************************";
+          "d=",d; 
+          "m=", m; 
+          "n=", n; 
+          "trunc=",tru; 
+          SmoothReduced2(mlist,m, tru,1,1);
+         }
+      }
+}
+//--------------------------------------------------------------------------------------------------
+proc ListPeriodLinearCycle(int n, int d, list #)
+"USAGE:
+    ListPeriodLinearCycle(integer_expression, integer_expression, list_expression)
+RETURN:
+    A list whose entries are period vectors of linear cycles of the Fermat variety
+    of dimension 'n' and degree 'd'. If you give the last optional entry then the
+    procedure will report what it is computing; 
+SEE ALSO: 
+    PeriodLinearCycle; aIndex; bIndex; 
+EXAMPLE: 
+    example ListPeriodLinearCycle; shows an example
+"
+{
+ intvec zv=0,0; intvec dm1=0,d-1;
+ for(int i=2;i<=n div 2+1; i=i+1)
+    {  zv=zv,0,0; dm1=dm1, 0,d-1; }
+list a=aIndex(zv,dm1); 
+list b=bIndex(n+2); int j; 
+
+ for(i=1;i<=size(b); i=i+1){ for(j=1;j<=n+2; j=j+1){ b[i][j]=b[i][j]-1;}}
+ intvec mlist=d; for (i=1;i<=n; i=i+1){mlist=mlist,d;}
+ 
+ intvec av; intvec bv;  list out;
+ for(j=1;j<=size(a); j=j+1)
+   {
+   for(i=1;i<=size(b); i=i+1)
+       {
+       av=a[j]; bv=b[i];
+       if (size(#)<>0){"Period vector of (a,b):",j,i;} 
+       out=insert(out, PeriodLinearCycle(mlist, av, bv,par(1)), size(out));
+       }
+   }
+return(out); 
+}
+example
+{"EXAMPLE:"; echo=2;
+  int n=2; int d=4;
+  ring r=(0,z), (x(1..n+1)),dp;
+  poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+  cp=subst(cp, x(1),z);  minpoly =number(cp);
+  list lp=ListPeriodLinearCycle(n,d, 0); lp;
+}
+//------------------------------------------------------
+proc SumThreeLinearCycle(int n, int d)       
+"USAGE:
+       SumThreeLinearCycle(integer_expression, integer_expression, integer_expression) 
+RETURN:
+    A list of positive integers. This is the codimensions of the Zariski tangenet space of the Hodge 
+    locus corresponding to deformations of a sum of 'N=3' linear cycles inside the Fermat variety of 
+    degree 'd' and dimension 'n'. This procedure uses 'ListPeriodLinearCycle' and then returns the 
+    rank of  the corresponding [p_{i+j}] matrix. The base ring must contain 'n+1' variables and a  
+    parameter which is '2d'-th root of unity. For now the procedure works 'N=3'. You can modify 
+    'alist' can creat 'SetSubsets' so that this works for arbitrary 'N'.
+    
+SEE ALSO:
+     ListPeriodLinearCycle
+EXAMPLE:
+    example SumThreeLinearCycle; shows an example
+"
+{ 
+
+int a_1; int a_2; int a_3; int i; 
+"Computing the period matrix of linear cycles"; 
+list lp=ListPeriodLinearCycle(n,d); int nlc=size(lp);
+"The number of linear cycles:", nlc; 
+intvec mlist=d; for (i=1;i<=n; i=i+1){mlist=mlist,d;}
+    for(a_1=1;a_1<=nlc; a_1=a_1+1)
+       {
+        for(a_2=a_1+1;a_2<=nlc; a_2=a_2+1)
+          {
+          for(a_3=a_2+1;a_3<=nlc; a_3=a_3+1)
+              {
+               "(a_,a_2,a_3)=", a_1,a_2,a_3; 
+               "rank=", rank(Matrixpij(mlist, lp[a_1]+lp[a_2]+lp[3]));
+              }
+          }
+       }
+}
+example
+{"EXAMPLE:"; echo=2;
+  int n=4; int d=4;
+  ring r=(0,z), (x(1..n+1)),dp;
+  poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+  cp=subst(cp, x(1),z);  minpoly =number(cp);
+  SumThreeLinearCycle(n,d); 
+}
+//---------------------------------------------------------------------
+proc DistinctHodgeLocus(int n, int d)       
+"USAGE:
+       DistinctHodgeLocus(integer_expression, integer_expression) 
+RETURN:
+    This preocedure verifies that there is no inclusion beween the Zariski tangent
+    space of two Hodge loci corresponding to two distinct sum of two linear cycles. 
+    This procedure uses 'ListPeriodLinearCycle'.  The base ring must contain  'n+1' 
+    variables and a  parameter which is '2d'-th root of unity.
+SEE ALSO:
+     ListPeriodLinearCycle
+EXAMPLE:
+    example DistinctHodeLocus; shows an example
+"
+{ 
+int a_1; int a_2; int i; int b_1; int b_2; int check=0;  int rank_1; int rank_2;
+"Computing the period matrix of linear cycles"; 
+list lp=ListPeriodLinearCycle(n,d); int nlc=size(lp); 
+intvec mlist=d; for (i=1;i<=n; i=i+1){mlist=mlist,d;}
+"The number of linear cycles is", nlc; 
+    for(a_1=1;a_1<=nlc; a_1=a_1+1)
+       {
+        for(a_2=a_1+1;a_2<=nlc; a_2=a_2+1)
+          {
+                    for(b_1=1;b_1<=nlc; b_1=b_1+1)
+                         {
+                        for(b_2=b_1+1;b_2<=nlc; b_2=b_2+1)
+                           {
+                             if (b_1<>a_1 or b_2<>a_2)
+                               {
+                                rank_1=rank( concat(  transpose(Matrixpij(mlist, lp[a_1]+lp[a_2])), 
+                                                      transpose(Matrixpij(mlist, lp[b_1]+lp[b_2]))  
+                                                   )  
+                                           );
+                                rank_2=rank(Matrixpij(mlist, lp[a_1]+lp[a_2]));
+                                if (rank_1<=rank_2){check=1;}
+                                "Cycle(",a_1,a_2,")",  "Cycle(",b_1,b_2,")", "rank:", rank_2, "<", rank_1;
+                               }
+                           }
+                         }  
+          }
+       }
+if (check==1){"The conjecture on distinct Hodge loci is wrong."} 
+else{"The conjecture on distinct Hodge loci is true."}     
+}
+example
+{"EXAMPLE:"; echo=2;
+  int n=4; int d=4;
+  ring r=(0,z), (x(1..n+1)),dp;
+  poly cp=cyclotomic(2*d); int degext=deg(cp) div deg(var(1));
+  cp=subst(cp, x(1),z);  minpoly =number(cp);
+  DistinctHodgeLocus(n,d); 
+}
+//---------------------------------------------------------
+proc RandomIntVec(int a, int b, int s)
+"
+USAGE:
+    RandomIntVec(integer_expression, integer_expression, integer_expression)
+RETURN:
+    A random integer vector of size 's' with entries between 'a' and 'b'. 
+EXAMPLE: 
+    example RandomIntVec; shows an example
+SEE ALSO:
+    random
+"
+{
+intvec out; 
+for (int i=1;i<=s; i=i+1){out=out,random(a,b);}
+out=out[2..size(out)]; 
+return(out); 
+}
+example
+{"Example:"; echo=2;
+    RandomIntVec(1,100,10);
+}
+//--------------------------------------------------------------------
+proc GoodMinor(matrix A)
+"
+USAGE:
+    GoodMinor(matrix_expression)
+RETURN:
+    This uses 'gaussred_pivot' twice and returns a square minor of
+    'A' of size 'rank(A)' with non-zero determinant.  The matrix 'A'
+    must be in the base field of the ring. 
+EXAMPLE: 
+    example GoodMinor; shows an example
+SEE ALSO:
+    gaussred_pivot
+"
+{
+int k=1; list plu; intvec out; 
+int i; int j; list Al=A;  list fout; intvec ko;
+for (k=1;k<=2; k=k+1)
+    {
+    out=0; 
+    plu=gaussred_pivot(Al[k]); 
+    for (i=1;i<=plu[4]; i=i+1)
+      {
+      for (j=1;j<=ncols(plu[1]); j=j+1)
+        {
+        if (plu[1][i,j]==1){ out=out,j;}
+        }
+      }  
+    out=out[2..size(out)];
+    fout=insert(fout, out, size(fout));
+    ko=1..ncols(Al[k]); 
+    Al=insert(Al, transpose(submat(Al[k], out, ko)), size(Al));
+    }
+return(fout); 
+}
+example
+{"Example:"; echo=2;
+   ring r=0,(x),dp;
+   matrix A[3][4]=1,2,3,4,1,1,1,1,2,2,1,1;
+   list v=GoodMinor(A);
+   matrix B=submat(A,v[1],v[2]); det(B); 
+}
+//--------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------
+//--------------------------Modular Differential Equations----------------------------- 
+//--------------------------------------------------------------------------------------
+proc foliation(poly f, list ll, diform, list #)
+"USAGE:
+    foliation(poly_expression, list_expression, poly_expression, list_expression)
+    foliation(poly_expression, list_expression, matrix_expression, list_expression)
+    
+RETURN:
+   For a tame polynomial 'f', a list of its parameters 'll', a differential form 'diform' in
+   the Brieskorn module H'(resp. H'') for  'diform'  a matrix (resp. a polynomial) and an
+   optional list which has the same structure as the output of 'infoof', this procedure
+   calculates  a list of vector fields which spans the tangent space of the holomorphic
+   foliation given by
+                                                  integral(diform)=constant.
+SEE ALSO:
+   gaussmanin; guassred; cleardenommat; infoof; 
+EXAMPLE: 
+    example foliation; shows an example
+"
+{
+
+//First we obtain the information of f
+list lula;
+if (size(#)==0)
+   {lula=infoof(f);}
+else
+  {lula=#;}
+
+int mu=lula[8];
+int np=size(ll);
+
+list k=gaussmanin(f, ll, diform,lula);
+
+int i;
+
+matrix A[np][mu]; // Its rwos are the gaussmanin connection of the diform with respect to parameters 
+                               // in ll. 
+    for (i=1;i<=np; i=i+1)
+         {
+         A[i,1..mu]=k[i+1]; 
+          }
+list gred=gaussred(A);   // gred[1]*A=gred[2]*gred[3].
+          
+if (gred[4]==np)
+    {"// ** The number of parameters is not sufficient **";}
+else
+        { 
+        matrix  U1P[np][np]=inverse(gred[2])*gred[1];
+        //It will be useful to use a better algorithm for calculating inverse, because gred[2] is triangular.   
+        matrix XX[1][np];
+        list live;
+         
+        for (i=gred[4]+1; i<=np; i=i+1)
+              {  
+              XX=0; 
+              XX=submat(U1P, i,1..np);
+              XX=cleardenommat(XX)[2];
+              live=insert(live, XX, size(live));
+              }
+        return(live);
+       }
+   
+}
+example
+{"EXAMPLE:"; echo=2;
+ring r=(0,t(1..3)),(x,y),wp(2,3);
+poly f=y^2-(4*(x-t(1))^3-t(2)*(x-t(1))-t(3));
+list li=t(1..3);
+poly p=x;
+foliation(f,li,p);
+
+ring r=(0,t(1..3)),(x,y),wp(2,3);
+poly f=y^2-4*(x-t(1))*(x-t(2))*(x-t(3));
+list li=t(1..3);
+poly p=x;
+foliation(f,li,p);
+}
+//----------------------------------------------------------------------------------------------------------
+proc qexpansion (list vecfield, list denomv, list pose, intvec upto, intvec whichpow, number c_2, list #)
+"USAGE:
+    qexpansion(list_expression, list_expression, list_expression, integer vector_expression, integer 
+    vector_expression, number_expression)
+RETURN:
+    A list. The same as the third entry. The i-th entry of the first list divided by the i-th entry
+    of the second list is the i-th entry of the ODE for which you want to calculate the q-expansion
+    of its solutions. All the entries of the first three lists are polynomials. The variables of the
+    ODE must be the first variables of your ring and the q-variable must be the next. The procedure 
+    takes pose[i]+var(i)*q^upto[i], substitute it in the ODE and compare the coefficients of 
+    q^whichpow[i] in the i-th row of the ODE. The derivation is supposed to be c_2*q*d/dq.
+    The last entry is optional. If it is not empty, then it must be a list with one or two entries. 
+    If #[1]=1 then the procedure in each step will check if the calculated q-series satisfy the ODE or not. 
+    If not, it will give you an error message. If #[2] is empty then the procedure uses the command std in 
+    order to solve a system of linear equations. This may slow down the speed of calculations. In the case 
+    upto=whichpow and all the entries of denomv starting with a non-zero constant term, we can use  a more 
+    effective method avoiding the command std. In this case the recursion is of the form
+                        T_n=(A-n*c_2*diag)^(-1)T_!
+    where T_! is an expression in terms of T_m, m<n and diag is a diagonal matrix containing the constant terms of
+    the list denomv. If you want this option put #[2]=(A-n*c_2*diag)^(-1). 
+
+SEE ALSO: 
+    std, 
+EXAMPLE: 
+    example qexpansion; shows an example
+"
+{
+
+int di=size(vecfield);
+int i,j;
+poly q=var(di+1);
+   if (size(#)<2)
+   {
+   for (i=1; i<=di; i=i+1)
+       {
+       pose[i]=pose[i]+var(i)*q^(upto[i]);
+       }
+   }
+list vecfield1=vecfield;
+list denomv1=denomv;
+   for (i=1; i<=di;i=i+1)
+      {
+        for (j=1; j<=di;j=j+1)
+            { 
+            vecfield1[j]=subst(vecfield1[j], var(i),pose[i]);
+            denomv1[j]=subst(denomv1[j], var(i),pose[i]);
+            }
+      }
+ 
+
+
+list vecfield2=vecfield1;
+for (i=1; i<=di;i=i+1)
+      {  
+       vecfield1[i]=(c_2*denomv1[i]*q*diff(pose[i],q)-vecfield1[i]);
+       vecfield2[i]=vecfield1[i]/q^(whichpow[i]);     
+                if (size(#)<>0)
+                 { 
+                 if (#[1]==1)
+                   {
+                   if (vecfield1[i]-q^(whichpow[i])*vecfield2[i]<>0){"You initial power series is not correct!"; i;}
+                   }
+                 }
+       vecfield1[i]=subst(vecfield2[i],q,0);
+      
+      }
+if (size(#)>1)
+   {
+   matrix KK[di][1];
+   for (i=1; i<=di;i=i+1)
+        {
+         KK[i,1]=vecfield1[i];
+        }
+        KK=#[2]*KK;
+        for (i=1; i<=di;i=i+1)
+          {
+          pose[i]=pose[i]+KK[i,1]*q^(upto[i]);
+          } 
+   return(pose);
+   }
+else
+   {
+   ideal II;
+   for (i=1; i<=di;i=i+1)
+      {II=II, vecfield1[i];}
+   II=std(II);
+   for (i=1; i<=di;i=i+1){
+                         pose[i]=subst(pose[i], var(i), reduce(var(i), II));
+                         }
+   return(pose);
+   }                   
+}
+example
+{"EXAMPLE:"; echo=2;
+     LIB "linalg.lib"; 
+     ring r=0, (t_1,t_2,t_3,q),dp;
+     list vecfield=1/12*(t_1^2-t_2), 1/3*(t_1*t_2-t_3), 1/2*(t_1*t_3-t_2^2);
+     //This is the classical Ramanujan differential equation between Eisenstein series. 
+     list pose=1-24*q,1+240*q,1-504*q;
+     list denomv=1,1,1; 
+     intvec upto;
+     intvec whichpow;
+     int iter=180;
+     int n;
+     for (n=2; n<=iter;n=n+1)
+              {
+              upto=n,n,n; whichpow=upto;
+              pose=qexpansion(vecfield,denomv,pose,upto,upto,1);
+              }
+    list ber=-24,240,-504;
+    for (n=1; n<=3;n=n+1){pose[n]=pose[n]/ber[n];}
+    pose;
+}
+//---------------------------------------------------------------------------------------------
+proc HalphenRamanujan (int which, list tlist, list #)
+"USAGE:
+    HalphenRamanujan(integer_expression, list_expression, list_expression)
+RETURN:
+    The modular differential equations are listed in this procedure. The integer which means
+     which one according to the numbering below. tlist is the list of variables used in the 
+     differential equation. The last entry is the list of parameters used in the differential equation.
+     It returns one list or two lists of the same size. If it is two lists then the i-th entry of 
+     the first list divided by the i-th entry of the second list is the i-th entry of the differential 
+     equation. If it is one list then the second list is supposed to be the one with only 1 in its entries.
+     1. The Ramanujan differential equation between Eisenstein series
+     2. The Halphen differential equation with three parameters
+     3. The modular differential equation attached to mirror quintic Calabi-Yau threefolds.
+     4. The modular differential equation attached to mirror quintic Calabi-Yau threefolds (in 10 dimension).
+SEE ALSO: 
+    
+EXAMPLE: 
+    example HalphenRamanujan; shows an example
+"
+{
+if (which==1)
+   {
+   poly t(1..3);
+   int i;
+   for (i=1;i<=3;i=i+1){t(i)=tlist[i]; }
+   list vecfield=1/12*(t(1)^2-t(2)), 1/3*(t(1)*t(2)-t(3)), 1/2*(t(1)*t(3)-t(2)^2);
+   return(vecfield);
+   }
+if (which==2)
+   {
+   poly t(1..3);
+   poly a=#[1]; poly b=#[2]; poly c=#[3];
+   int i;
+   for (i=1;i<=3;i=i+1){t(i)=tlist[i]; }
+   list vecfield= ((b+c-1)*t(1)^2+(a-1)*(t(1)*t(2)+t(1)*t(3) -t(2)*t(3))), ((a+c-1)*t(2)^2+(b-1)*(t(2)*t(1)+t(2)*t(3) -t(1)*t(3))), ((a+b-1)*t(3)^2+(c-1)*(t(3)*t(1)+t(3)*t(2) -t(1)*t(2)));
+   return(vecfield);
+   }
+if (which==3)
+   {
+   poly t(0..6);
+   int i;
+   for (i=0;i<=6;i=i+1){t(i)=tlist[i+1];}
+    list Ravec=(3750*t(0)^5+t(0)*t(3)-625*t(4)),(-390625*t(0)^6+3125*t(0)^4*t(1)+390625*t(0)*t(4)+t(1)*t(3)),(-5859375*t(0)^7-625*t(0)^5*t(1)+6250*t(0)^4*t(2)+5859375*t(0)^2*t(4)+625*t(1)*t(4)+2*t(2)*t(3)),(-9765625*t(0)^8-625*t(0)^5*t(2)+9375*t(0)^4*t(3)+9765625*t(0)^3*t(4)+625*t(2)*t(4)+3*t(3)^2),(15625*t(0)^4*t(4)+5*t(3)*t(4)),(-625*t(0)^5*t(6)+9375*t(0)^4*t(5)+2*t(3)*t(5)+625*t(4)*t(6)),(9375*t(0)^4*t(6)-3125*t(0)^3*t(5)-2*t(2)*t(5)+3*t(3)*t(6));
+    list denom=t(5),t(5),t(5),t(5),t(5),t(5),t(5);
+    return(list(Ravec,denom));
+   }
+if (which==4)
+   {
+   poly t(0..9);
+   int i;
+   for (i=0;i<=9;i=i+1){t(i)=tlist[i+1];}
+    list Ravec=t(8)-t(0)*t(9), -625*t(0)*t(8)-t(1)*t(9), -9375*t(0)^2*t(8)-t(1)*t(8)-2*t(2)*t(9), -5*t(7)*t(8)^2+5*t(6)*t(8)*t(9)+4*t(2)*t(8)-3*t(3)*t(9),-5*t(4)*t(9),-t(6)*t(8)-3*t(5)*t(9)-t(3), -t(7)*t(8)-2*t(6)*t(9)-t(2), -t(7)*t(9)-t(1), t(8)^2*t(6)-3*t(8)*t(9)*t(5), t(8)^2*t(7)-t(9)^2*t(5);
+    list denom=1,1,1,1,1,1,1,1,t(5),t(5);
+    return(list(Ravec,denom));
+   }
+}
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0,(t(1..7),a,b,c),dp;
+    HalphenRamanujan(1,list(t(1..3)));
+    HalphenRamanujan(2,list(t(1..3)),list(a,b,c)); 
+    HalphenRamanujan(3,list(t(1..7)));
+}
+
+
+//---------------------------------------------------------------------------------------------
+proc derivatives (list Plist, list varlist)
+"USAGE:
+    derivatives(list_expression, list_expression)
+RETURN:
+    A m*n matrix, where 'm' is the size of the list 'Plist' and 'n' is the size of 'varlist'. The
+    (i,j)-entry of the matrix contains the derivative of Plist[i] with respect to the variable varlist[j].
+SEE ALSO: 
+    diff
+EXAMPLE: 
+    example derivatives; shows an example
+"
+{
+int i; int j;
+int nn=size(Plist);
+int mm=size(varlist);
+matrix Vm[nn][mm];
+           for (i=1; i<=nn;i=i+1)
+              {
+              for (j=1; j<=mm;j=j+1)
+                {
+                  Vm[i,j]=diff(Plist[i],varlist[j]);
+                
+                }        
+              }
+return(Vm);
+}
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0,(t(1..3)),dp;
+    list AA=t(1)^2+t(2),t(3)^3*t(1), t(1)*t(2)*t(3);
+    print(derivatives(AA,list(t(1..2))));
+}
+
+
+
+//--------------------------------------------------------------------------------
+ proc OneOver(poly P, ideal modI, int N) 
+"USAGE: 
+    OneOver(poly_expression, ideal_expression, integer_expression)
+RETURN:
+    The same as the first entry. This procedure writes P=c-Q, where c
+    is a constant and Q is a polynomial vanishing at the origin (all 
+    variables to be zero) and then it gives the geometric series 
+        1/P=(1/c)*1/(1-Q/c)=(1/c)*(1+(Q/c)+(Q/c)^2+...)
+    The result is calculated mod the ideal 'modI'. The powers are
+    calculated until (Q/c)^N. The ideal 'modI' must be in the standard 
+    basis. 
+SEE ALSO: 
+     reduce, 
+EXAMPLE: 
+    example OneOver; shows an example
+
+"
+{
+int i;
+poly cons=P;
+for (i=1;i<=nvars(basering); i=i+1){ cons=subst(cons, var(i),0);}
+poly Q; Q=1-P/number(cons);
+poly oneov=1;
+for (i=1;i<=N; i=i+1){ oneov= oneov+reduce(Q^i,modI);}
+oneov=1/number(cons)*oneov;
+return(oneov);
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t),q,dp; 
+    OneOver(1-t*q,std(ideal(q^10)),9);
+}
+//--------------------------------------------------------------------------
+//--------------------------------------------------------
+proc LambertSeries(poly P, poly Q) 
+"USAGE: 
+    LambertSeries(poly_expression)
+RETURN:
+    A list. The polynomials 'P' and 'Q' are in one variable q:=var(1) and 'Q' has no
+    constant term. It computes the coefficients b_m in 
+                      P=b_0+b_1*Q(q)+b_2*Q(q^2)+b_3*Q(q^3)+...
+    For 'Q=q/(1-q)=q+q^2+q^3+...' this is the well-known Lambert series format of 'P'. 
+SEE ALSO: 
+    
+EXAMPLE: 
+    example LambertSeries; shows an example
+
+"
+{
+int i; int N=deg(P); list outp=subst(P,var(1),0);
+number Q_1=number(subst(diff(Q,var(1)),var(1),0));
+Q=Q/Q_1; 
+P=P-outp[1]; poly hilfe; 
+for (i=1;i<=N; i=i+1)
+     { 
+     hilfe=P/var(1)^i; 
+     hilfe=subst(hilfe,var(1),0); 
+     outp=insert(outp, hilfe, size(outp)); 
+     P=P-hilfe*subst(Q,var(1),var(1)^i);  
+     }
+for (i=2;i<=size(outp); i=i+1){outp[i]=outp[i]/Q_1;}    
+return(outp);
+}
+example
+{"Example:"; echo=2;
+    ring r=0,q,dp;
+    poly E_2=12*q^11+18*q^10+13*q^9+15*q^8+8*q^7+12*q^6+6*q^5+7*q^4+4*q^3+3*q^2+q-1/24;  //The Eisenstein series 
+    poly lam=q*OneOver(1-q,std(ideal(q^12)),11);
+    LambertSeries(E_2,lam);
+    
+   poly Q=2875*q+609250*q^2+317206375*q^3+242467530000*q^4+229305888887625*q^5;
+   poly Yu=28663236110956000*q^5+15517926796875*q^4+8564575000*q^3+4876875*q^2+2875*q+5;
+   Q=q*diff(Q,q); Q=q*diff(Q,q); Q=q*diff(Q,q); 
+   LambertSeries(Yu,Q); 
+}
+//------------------------------------------------------------------------------------------
+proc PochhammerSymbol(number P, int n) 
+"USAGE: 
+    PochhammerSymbol(number_expression, integer_expression)
+RETURN:
+    The same as the first entry. It returns 
+          'P(P+1)(P+2)...(P+n-1)'
+SEE ALSO: 
+    
+EXAMPLE: 
+    example PochhammerSymbol; shows an example
+
+"
+{
+int i; number ps=P;
+for (i=1;i<=n-1; i=i+1)
+    { 
+    ps=ps*(P+i);
+    }
+if (n>0){return(ps);}
+if (n==0){return(number(1));}
+}
+example
+{"Example:"; echo=2;
+    ring r=(0,t),q,dp; 
+    PochhammerSymbol(t,3);
+}
+//-------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//-----------------------------------------Old procedures-Out of use---------------------------------
+//----------------------------HODGE NUMBERS--------------------------------
+proc hodgenum(int n, int d, list #)
+"USAGE:
+    hodgenum (int_expression, int_expression)
+    hodgenum (int_expression, int_expression, list_of_integers);
+RETURN: 
+    (n+1)*1  matrix A. 
+    The i-th entry of A contains the hodge number 'h^{i-1,n-(i-1)}' of
+    a hypersurface of degree d in the weighted projective space P^# of
+    dimension n+1.
+    If the list # is empty then the ordinary projective space is considered. 
+    The procedure works only for 'n<5'.   Also, it works in the case where all
+    weights divide 'd'.
+       
+EXAMPLE: 
+    example hodgenum; shows an example
+"
+{
+int i, i1, i2, i3, i4, i5, i6, a; int todo; int out=0;
+// a counts the hodge pieces, todo=1 is for illegal entries.
+list wei;  //The list of weights
+ 
+if (size(#)==0)
+   {
+     for (i=1; i<=n+2; i=i+1)
+         {wei=insert(wei,1);}  
+   }
+ else 
+   {wei=#;}
+
+ for (i=1; i<=size(#); i=i+1)
+     {
+     if (#[i]*(d div #[i])<> d)
+      {
+        "//** Sorry, I can only compute Hodge numbers for weights dividing d"; 
+        todo=1; i=size(#)+1; 
+      }
+
+     }
+ if (n+2<>size(wei))
+    {"//** Please give", n+2, "weights"; todo=1;}
+ 
+
+ if (n>=5)
+    {"//** Sorry, I compute the Hodge numbers of hypersurfaces of dimension 
+     less than 5"; todo=1;}
+
+
+if (todo==0)
+ {
+ intmat  hn[n+1][1];
+ 
+ if (n==4)
+   {
+    for (a=0; a<=n; a=a+1) 
+    {
+    for (i1=1; i1<= (d div wei[1])-1; i1=i1+1)
+    {
+      for (i2=1; i2<= (d div wei[2])-1; i2=i2+1)
+        {
+            for (i3=1; i3<=(d div wei[3])-1; i3=i3+1)
+                {
+                 for (i4=1; i4<= (d div wei[4])-1; i4=i4+1)
+                     {
+                      for (i5=1; i5<= (d div wei[5])-1; i5=i5+1)
+                          {
+                            for (i6=1; i6<=(d div wei[6])-1; i6=i6+1)
+                             {  
+                             if (i1*wei[1]+i2*wei[2]+i3*wei[3]+i4*wei[4]+
+                                 i5*wei[5]+i6*wei[6]==d*(a+1)) {out=out+1;}
+                             }
+                          }
+                     }
+                 }
+        }
+    }
+    
+    hn[a+1,1]=out;
+    out=0;
+    }
+   return(hn);
+   }
+ 
+
+if (n==3)
+   {
+    for (a=0; a<=n; a=a+1) 
+    {
+    for (i1=1; i1<= (d div wei[1])-1; i1=i1+1)
+    {
+      for (i2=1; i2<= (d div wei[2])-1; i2=i2+1)
+        {
+            for (i3=1; i3<=(d div wei[3])-1; i3=i3+1)
+                {
+                 for (i4=1; i4<= (d div wei[4])-1; i4=i4+1)
+                     {
+                      for (i5=1; i5<= (d div wei[5])-1; i5=i5+1)
+                          {
+                            
+                               
+                             if (i1*wei[1]+i2*wei[2]+i3*wei[3]+i4*wei[4]+
+                                 i5*wei[5]==d*(a+1)) {out=out+1;}
+                             
+                          }
+                     }
+                 }
+        }
+    }
+    hn[a+1,1]=out;
+    out=0;
+    }
+   return(hn);
+   }
+
+
+
+
+
+if (n==2)
+   {
+    for (a=0; a<=n; a=a+1) 
+    {
+    for (i1=1; i1<= (d div wei[1])-1; i1=i1+1)
+    {
+      for (i2=1; i2<= (d div wei[2])-1; i2=i2+1)
+        {
+            for (i3=1; i3<=(d div wei[3])-1; i3=i3+1)
+                {
+                 for (i4=1; i4<= (d div wei[4])-1; i4=i4+1)
+                     {
+                                if (i1*wei[1]+i2*wei[2]+i3*wei[3]+i4*wei[4]
+                                 ==d*(a+1)) {out=out+1;}
+                             
+                          
+                     }
+                 }
+        }
+    }
+    hn[a+1,1]=out;
+    out=0;
+    }
+   return(hn);
+   }
+
+
+
+
+if (n==1)
+   {
+    for (a=0; a<=n; a=a+1) 
+    {
+    for (i1=1; i1<= (d div wei[1])-1; i1=i1+1)
+    {
+      for (i2=1; i2<= (d div wei[2])-1; i2=i2+1)
+        {
+            for (i3=1; i3<=(d div wei[3])-1; i3=i3+1)
+                {
+                                if (i1*wei[1]+i2*wei[2]+i3*wei[3]
+                                 ==d*(a+1)) {out=out+1;}
+                             
+                          
+                     
+                 }
+        }
+    }
+    hn[a+1,1]=out;
+    out=0;
+    }
+   return(hn);
+   }
+
+if (n==0)
+   {
+    for (a=0; a<=n; a=a+1) 
+    {
+    for (i1=1; i1<= (d div wei[1])-1; i1=i1+1)
+    {
+      for (i2=1; i2<= (d div wei[2])-1; i2=i2+1)
+        {
+                                 if (i1*wei[1]+i2*wei[2]
+                                 ==d*(a+1)) {out=out+1;}
+                             
+                          
+                     
+                 
+        }
+    }
+    hn[a+1,1]=out;
+    out=0;
+    }
+   return(hn);
+   }
+
+
+
+
+
+ 
+ }
+
+
+}
+example
+{"Example:"; echo=2;
+ ring r=0,x,dp;
+ hodgenum(4,3);      
+}
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
+proc DimensionOfHodgeCycles(intvec dlist, list #)       
+"USAGE:
+       DimensionOfHodgeCycles(integer vector_expression) 
+       DimensionOfHodgeCycles(integer vector_expression, integer_expression) 
+RETURN:
+    An integer which is the the dimension of the vector space of Hodge cycles of the 
+    generalized Fermat variety. The exponent of each variable is given in 'dlist'.
+    The second entry is optional. If it is
+    0: then the procedure gives the mentioned number and a list of the Hodge numbers of the 
+       compactified Fermat variety.
+    1: then the procedure gives an integer valued matrix such that a perpendicular
+       vector to its columns correpond to a Hodge cycle. 
+SEE ALSO: 
+    PeriodMatrix, rank.     
+EXAMPLE: 
+    example DimensionOfHodgeCyles; shows an example
+"
+{
+def prevRing=basering;
+int n=size(dlist)-1; //---dimension----
+int i,j,k; 
+int d=lcm(dlist);
+list wlist;  //-----------------------------------------weight of the variables----------
+for (i=1; i<=size(dlist); i=i+1){ wlist=insert(wlist, (d div dlist[i]), size(wlist));} 
+//-------------------------------------------the basering with the d-th root of unity------
+ring rlocal=(0,z), (x(1..n+1)),wp(wlist[1..n+1]); 
+poly cp=cyclotomic(d);  
+int degext=deg(cp) div deg(var(1));
+cp=subst(cp, x(1),z);                   
+minpoly =number(cp); //-here we have to use the minimal polynomial of the d-th root of unity---
+poly f; for (i=1; i<=n+1; i=i+1){f=f+x(i)^dlist[i];}
+ideal I=kbase(std(jacob(f)));//-I have identified I with a basis of vanishing cycles------------ 
+int mu=1; 
+poly XX=1;  
+for (i=1; i<=n+1; i=i+1){mu=mu*(dlist[i]-1); XX=XX*var(i);}
+//-------------------------------We order I according to its mixed Hodge structure---------------
+ list l1; list l2; int k_1;
+ for (i=1; i<=n; i=i+1){ l1=insert(l1,list());  l2=insert(l2,list()); }   l1=insert(l1,list()); 
+ for (i=1; i<=mu; i=i+1){ 
+                         k_1=deg(I[i]*XX);
+                         k=k_1 div d;
+                         if (k*d<>k_1) { l1[k+1]=insert(l1[k+1], I[i], size(l1[k+1]));  }else { l2[k]=insert(l2[k], I[i], size(l2[k])); }
+                        }
+
+ list hn1, hn2; //----------------list of Hodge numbers------------------------------------------
+ list l1l2; for (i=1; i<=n+1; i=i+1){ l1l2=l1l2+l1[i]; hn1=insert(hn1, size(l1[i]), size(hn1)); }
+           for (i=1; i<=n; i=i+1)   { l1l2=l1l2+l2[i]; hn2=insert(hn2, size(l2[i]), size(hn2));  }
+ideal J;   for (i=1; i<=size(l1l2); i=i+1){J[i]=l1l2[i]; }  
+int mu_1;  
+for (i=1; i<=n+1; i=i+1)
+     {mu_1=mu_1+hn1[i];}//---the dimension of the primitive cohomology of the compactified variety--
+//--------------------------------Period Matrix of F^{n/2+1}--------------------------------------
+int hFn=0; for (i=1; i<=(n div 2); i=i+1){hFn=hFn+hn1[i];}
+
+if (hFn<>0)
+{
+  matrix PM[mu][hFn]=PeriodMatrix(ideal(J[1..hFn]),I, z);
+  matrix perp[mu][degext*hFn];
+  matrix komak[mu][hFn]; 
+  for (i=1; i<=degext; i=i+1)
+                           { 
+                           komak=subst(PM,z,0); 
+                           perp[1..mu, ((i-1)*hFn+1)..(i*hFn)]=komak;
+                           PM=(PM-komak)/z;
+                           }                          
+
+
+  int DHC=(mu_1+1)- rank(perp);
+  setring prevRing;
+  matrix perp=imap(rlocal, perp);
+  if (size(#)<>0)
+     {
+     if (#[1]==0){return(list(DHC, hn1));}
+     if (#[1]==1){return(perp);}
+     }
+  else{return(DHC);}
+}
+else
+{
+  int DHC=mu_1+1;
+    if (size(#)<>0)
+     {
+     if (#[1]==0){return(list(DHC, hn1));}
+     if (#[1]==1){"All the homology classes are Hodge";}
+     }
+    else{return(DHC);}
+}
+}
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0,x,dp; 
+    intvec dl=5,5,5;
+    DimensionOfHodgeCycles(dl); 
+}
+//---------------------------------------------------------------------------------
+proc MulMat (poly P, list V1, list V2, ideal gI)       
+"USAGE:
+       MulMat(poly_expression,list_expression, list_expression, ideal_expression) 
+RETURN:
+    A matrix. It is designated for computing IVHS of homogeneous polynomials.
+    It computes the matrix of multiplication by 'P'  of the elements of the list 'V1'.
+    The result mod the ideal 'gI' is in the vector space generated by 'V2'. The matrix 
+    is written in the basis V1 and V2. It is supposed that such a multiplication maps the 
+    vector space generated by 'V1' to the vector space generated by 'V2' and modulo
+    the ideal 'gI'. 'V1' and 'V2' are supposed to be part of okbase(gI).
+"
+{
+int mu1=size(V1); int mu2=size(V2);
+matrix A[mu1][mu2];
+int s,i,k; poly h1; poly komak; 
+      for (k=1; k<=mu1; k=k+1) 
+        {
+           h1=reduce(P*V1[k], gI); komak=0;
+           for (s=1; s<=size(h1); s=s+1) 
+               {
+                  for (i=1; i<=mu2; i=i+1) 
+                   {   
+                   if ( leadmonom(h1[s]) == leadmonom(V2[i]) )
+                      {A[k,i]=leadcoef(h1[s]); komak=komak+V2[i]*A[k,i];  }
+                   }
+               }
+         if (h1<>komak){"There is a problem in your data! Type help MulMat to get some information";}      
+        }
+return(A);
+} 
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0, (x,y),dp;
+    poly f=x3+y3;
+    ideal I=std(jacob(f)); list l1=x,y; list l2=xy;
+    print(MulMat(x, l1, l2, I));
+}
+//-----------------------------This might be used for IVHS for an arbitrary hypersurface----------------------------------------------
+proc MatrixpijOld(int de, int dn, matrix Pe)       
+"USAGE:
+       Matrixpij(integer_expression, integer_expression, matrix_expression) 
+RETURN:
+    A matrix. The matrix 'Pe' is supposed to be the periods  of a basis of the middle 
+    piece of the  Hodge decomposition of the Fermat variety 
+                F: x_0^de+x_1^de+x_2^de+...x_{dn+1}^de=0. 
+    of degree 'de' and dimension 'dn' over a Hodge cycles. It is a 1 times h matrix, 
+    where h is the middle Hodge  number of F. Its entries are in the field extension
+    of rational numbers with a de-th primitive root of unity. 
+    This procedure computes the matrix 
+                               [x_{i+j}] 
+    introduced in the article 
+    H. Movasati, Gauss-Manin connection in disguise: Noether-Lefschetz and Hodge loci.
+    
+"
+{
+int Ik=(dn div 2)-1; //The k-th level of IVHS  
+int k; int i; int j; 
+
+def prevRing=basering; 
+ring newRing=0,  (x(0..dn+1)),dp; 
+poly f;  for (i=0; i<=dn+1;i=i+1){f=f+x(i)^de;} 
+ideal jb=std(jacob(f));
+ideal moba=kbase(jb); int mu=size(moba); 
+int n_d=de; list defor; 
+int n_1=(Ik+1)*de-(dn+2); list hodge1; 
+int n_2=(Ik+2)*de-(dn+2); list hodge2;
+ 
+for (k=1; k<=mu; k=k+1)
+    {
+    if (deg(moba[k])==n_d){defor=insert(defor,moba[k], size(defor)) ;}
+    if (deg(moba[k])==n_1){hodge1=insert(hodge1,moba[k], size(hodge1));}
+    if (deg(moba[k])==n_2){hodge2=insert(hodge2,moba[k], size(hodge2));}
+    }
+                   
+ int rn=size(defor); 
+ int an=size(hodge1); 
+ int bn=size(hodge2); 
+                      
+list lofB;
+for (k=1; k<=rn; k=k+1)
+    {
+    lofB=insert(lofB, MulMat(defor[k],hodge1, hodge2, jb), size(lofB));
+    }
+
+    
+
+    
+setring prevRing; 
+list lofB=imap(newRing,lofB); 
+matrix Xm[an][rn];
+for (k=1; k<=size(lofB); k=k+1)
+    {
+    Xm[1..an,k]=lofB[k]*transpose(Pe); 
+    }
+return(Xm);
+}
+example
+{"EXAMPLE:"; echo=2;
+    ring r=0, x(1..36),dp;
+    matrix P[1][44]=x(1..36);
+    print(Matrixpij(5,2,P));
+    
+}
+
+
+
+
+//-------------------------------------------------------
+
+
+
+
+
+
+
