@@ -27,7 +27,7 @@ In order to run all the codes developed, you will need to install the following 
 
 It will be common that at the beginning of the source files you will find lines like 
 
-```python
+   ```python
 n_arr = np.array([2, 4])
 d_arr_min = np.array([3, 3]) 
 d_arr_max = np.array([14, 6])	
@@ -43,7 +43,7 @@ These lines mean that the program will produce its outcome for the cases (n,d) =
 execute(read("hodge_and_vanishing_cycles_matrix_script_n_2.txt"))	
 ```
 
-⋅⋅⋅When running the program it is strongly recommended to do it from the very same folder where it is located.
+   When running the program it is strongly recommended to do it from the very same folder where it is located.
 
 2. Convert raw files into matrix format files using the python script. Such script is located in **scripts/python** and goes under the name *matrix_format_hodge_and_vanishing_int_matrix.py*
 
@@ -53,7 +53,7 @@ execute(read("hodge_and_vanishing_cycles_matrix_script_n_2.txt"))
 parentDir = "/home/myUser/Documents/Integral_Hodge_Conjecture_Repository/";	
 ```
 
-⋅⋅⋅It is important to include the backslash at the end of the string.
+   It is important to include the backslash at the end of the string.
 
 
 ### Linear Cycles
@@ -61,17 +61,17 @@ parentDir = "/home/myUser/Documents/Integral_Hodge_Conjecture_Repository/";
 
 1. Run the script which goes under the name **linear_cycle_script**, which is located in **scripts/matlab**.
 
-⋅⋅⋅Do not forget to edit the variable **parent_dir**. Same considerations as in the step 2 of the calculation of Hodge Cycles should be taken.
+   Do not forget to edit the variable **parent_dir**. Same considerations as in the step 2 of the calculation of Hodge Cycles should be taken.
 
-⋅⋅⋅At this point you have produced both primitive and nonprimitive linear cycles matrices.
+   At this point you have produced both primitive and nonprimitive linear cycles matrices.
 
 
 2. Run the following two Mathematica scripts
   - **smith_decomp_primitive_linear_cycles.m**
   - **smith_decomp_nonprimitive_linear_cycles.m**
-
-⋅⋅⋅Do not forget to edit the variable **parent_dir**. Same considerations as in the step 2 of the calculation of Hodge Cycles
-⋅⋅⋅should be taken.
+  
+   Do not forget to edit the variable **parent_dir**. Same considerations as in the step 2 of the calculation of Hodge Cycles
+   should be taken.
 
 ### Elementary divisors
 ======
@@ -81,5 +81,5 @@ parentDir = "/home/myUser/Documents/Integral_Hodge_Conjecture_Repository/";
   - *nonprimitive_elementary_divisors_counting.py*
   - *hodge_cycles_elementary_divisors_counting.py*
 
-⋅⋅⋅These scripts will generate a *.tex* file including the elementary divisors for each case. As usual, the cases to be computed
-⋅⋅⋅could be set in the scripts, editing the lines mentioned at the beginning of this section.
+   These scripts will generate a *.tex* file including the elementary divisors for each case. As usual, the cases to be computed
+   could be set in the scripts, editing the lines mentioned at the beginning of this section.
