@@ -1,6 +1,6 @@
 # Integral Hodge Conjecture for Fermat Varieties
 
-In this repository it can be found an implementation of the algorithms described in [Aljovin, Movasati, and Villaflor 2017](http://w3.impa.br/~aljovin/docs/IntHodgeConj.pdf). It is important to say, that the present version is a light version. In other words, just the main cases are uploaded, due to space issues. However, the available codes can reproduce all the files considered in mentioned paper. 
+In this repository it can be found an implementation of the algorithms described in [Aljovin, Movasati, and Villaflor 2017](http://w3.impa.br/~aljovin/docs/IntHodgeConj.pdf). It is important to say, that the present version is a light version. In other words, just the main cases are uploaded, due to space issues. Nevertheless, the available codes can reproduce all the files considered in the mentioned paper. 
 
 
 ## Getting Started
@@ -37,7 +37,7 @@ These lines mean that the program will produce its outcome for the cases (n,d) =
 
 ### Hodge Cycles
 
-1. Run Singular scripts to generate both Hodge Cycles and Vanishing Intersection matrices. There is a file for The script is located in scripts/singular. Here is an example code to produce the desired matrices for n = 2.
+1. Run Singular scripts to generate both the Hodge Cycles and the Vanishing Intersection matrices. There is a directory for these scripts, which is located in scripts/singular. Here is an example code to produce the desired matrices for n = 2.
       ```
       execute(read("hodge_and_vanishing_cycles_matrix_script_n_2.txt"))
       ```
