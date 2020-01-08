@@ -1,6 +1,6 @@
 # Integral Hodge Conjecture for Fermat Varieties
 
-In this repository it can be found an implementation of the algorithms described in [Aljovin, Movasati, and Villaflor 2017](https://arxiv.org/abs/1711.02628). It is important to say, that the present version is a light version. In other words, just the main cases are uploaded, due to space issues. Nevertheless, the available codes can reproduce all the files considered in the mentioned paper. 
+In this repository it can be found an implementation of the algorithms described in [Aljovin, Movasati, and Villaflor 2019](https://arxiv.org/abs/1711.02628). It is important to say, that the present version is a light version. In other words, just the main cases are uploaded, due to space issues. Nevertheless, the available codes can reproduce all the files considered in the mentioned paper. 
 
 
 ## Getting Started
